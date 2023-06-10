@@ -1,11 +1,13 @@
 #ifndef POSTGRESQL_H
 #define POSTGRESQL_H
 
-#include <libpq-fe.h>
-#include "../common.h"
+#include "common.h"
 
 // Function to establish a PostgreSQL connection
 PGconn* connect_to_postgresql(const DatabaseConnection* connection);
+
+// Function to initialize a PostgreSQL database
+void initialize_postgresql(PGconn* conn);
 
 // Function to execute a PostgreSQL query
 PGresult* execute_query_postgresql(PGconn* conn, const char* query);

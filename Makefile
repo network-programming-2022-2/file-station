@@ -10,15 +10,18 @@ SERVER_SRCS = $(SRCDIR)/server.c
 SERVER_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SERVER_SRCS))
 SERVER_TARGET = $(BINDIR)/server
 
-DB_SRCS = $(SRCDIR)/models/database.c
-DB_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(DB_SRCS))
-
 POSTGRESQL_SRCS = $(SRCDIR)/models/postgresql/postgresql.c
 POSTGRESQL_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(POSTGRESQL_SRCS))
 
+FILE_SRCS = $(SRCDIR)/models/postgresql/file.c
+FILE_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(FILE_SRCS))
+
+USER_SRCS = $(SRCDIR)/models/postgresql/user.c
+USER_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(USER_SRCS))
+
 all: $(SERVER_TARGET)
 
-$(SERVER_TARGET): $(SERVER_OBJS) $(DB_OBJS) $(POSTGRESQL_OBJS) 
+$(SERVER_TARGET): $(SERVER_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c

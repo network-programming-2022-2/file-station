@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <libpq-fe.h>
 
 typedef enum {
     POSTGRESQL,

@@ -18,6 +18,19 @@ PGconn* connect_to_postgresql(const DatabaseConnection* connection)
   return conn;
 }
 
+// Function to initialize a PostgreSQL database
+void initialize_postgresql(PGconn* conn)
+{
+    const char* createUsersTableQuery = 
+      "CREATE TABLE IF NOT EXISTS users (user_id SERIAL PRIMARY KEY, username VARCHAR(255), password VARCHAR(255), wrong_attempts INT, status INT, is_login INT)";
+    PGresult* result = PQexec(conn, createUsersTableQuery);
+    PQclear(result);
+    
+    const char* createFilesTableQuery = "CREATE TABLE IF NOT EXISTS files (file_id SERIAL PRIMARY KEY, filename VARCHAR(255), user_id INT, downloaded_number INT, FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE)";
+    result = PQexec(conn, createFilesTableQuery);
+    PQclear(result);
+}
+
 // Function to execute a PostgreSQL query
 PGresult* execute_query_postgresql(PGconn* conn, const char* query) 
 {

@@ -32,6 +32,33 @@ PGresult* get_all_users(PGconn* pgconn) {
     return result;
 }
 
+PGresult* get_users_by_status(PGconn* conn, int status) 
+{
+  // Prepare the SQL statement with appropriate placeholders for the values
+  const char* select_query = "SELECT * FROM users WHERE status = $1";
+  const char* values[1];
+  char status_str[10];
+  snprintf(status_str, sizeof(status_str), "%d", status);
+  values[0] = status_str;
+  PGresult* result = PQexecParams(conn, select_query, 1, NULL, values, NULL, NULL, 0);
+  return result;
+}
+
+PGresult* get_users_by_status_and_is_login(PGconn* conn, int status, int is_login)
+{
+  // Prepare the SQL statement with appropriate placeholders for the values
+  const char* select_query = "SELECT * FROM users WHERE status = $1 AND is_login = $2";
+  const char* values[2];
+  char status_str[10];
+  snprintf(status_str, sizeof(status_str), "%d", status);
+  values[0] = status_str;
+  char is_login_str[10];
+  snprintf(is_login_str, sizeof(is_login_str), "%d", is_login);
+  values[1] = is_login_str;
+  PGresult* result = PQexecParams(conn, select_query, 2, NULL, values, NULL, NULL, 0);
+  return result;
+}
+
 PGresult* get_user_by_id(PGconn* pgconn, int user_id) {
     // Prepare the SQL statement with appropriate placeholders for the ID value
     const char* select_query = "SELECT * FROM users WHERE user_id = $1";
@@ -41,6 +68,21 @@ PGresult* get_user_by_id(PGconn* pgconn, int user_id) {
     char user_id_str[10];
     snprintf(user_id_str, sizeof(user_id_str), "%d", user_id);
     values[0] = user_id_str;
+    
+    // Execute the prepared statement with the parameter values
+    PGresult* result = PQexecParams(pgconn, select_query, 1, NULL, values, NULL, NULL, 0);
+    
+    // Return the result set to the caller
+    return result;
+}
+
+PGresult* get_user_by_username(PGconn* pgconn, char* username) {
+    // Prepare the SQL statement with appropriate placeholders for the ID value
+    const char* select_query = "SELECT * FROM users WHERE username = $1";
+    
+    // Create the parameter values array
+    const char* values[1];
+    values[0] = username;
     
     // Execute the prepared statement with the parameter values
     PGresult* result = PQexecParams(pgconn, select_query, 1, NULL, values, NULL, NULL, 0);

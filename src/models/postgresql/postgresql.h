@@ -24,6 +24,9 @@ const char* get_column_name_postgresql(PGresult* result, int column_number);
 // Function to retrieve the value of a specific cell in a PostgreSQL query result
 const char* get_cell_value_postgresql(PGresult* result, int row_number, int column_number);
 
+// Function to drop all postgresql tables
+void drop_all_postgresql_tables(PGconn* conn);
+
 // Function to release resources and close the PostgreSQL connection
 void close_postgresql_connection(PGconn* conn);
 

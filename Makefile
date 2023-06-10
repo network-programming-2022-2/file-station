@@ -5,10 +5,15 @@ LDFLAGS = -lpq
 SRCDIR = src
 OBJDIR = obj
 BINDIR = bin
+TESTDIR = test
 
 SERVER_SRCS = $(SRCDIR)/server.c
 SERVER_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SERVER_SRCS))
 SERVER_TARGET = $(BINDIR)/server
+
+TEST_MODEL_SRCS = $(TESTDIR)/models/postgres_model_test.c
+TEST_MODEL_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(TEST_MODEL_SRCS))
+TEST_MODEL_TARGET = $(BINDIR)/test/postgres_model_test
 
 POSTGRESQL_SRCS = $(SRCDIR)/models/postgresql/postgresql.c
 POSTGRESQL_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(POSTGRESQL_SRCS))
@@ -31,6 +36,11 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 $(OBJDIR)/%.o: $(SRCDIR)/models/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+test: $(TEST_MODEL_TARGET)
+
+$(TEST_MODEL_TARGET): $(TEST_MODEL_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
 	@rm -rf $(OBJDIR) $(BINDIR)

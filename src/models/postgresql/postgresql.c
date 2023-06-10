@@ -70,6 +70,15 @@ const char* get_cell_value_postgresql(PGresult* result, int row_number, int colu
   return PQgetvalue(result, row_number, column_number);
 }
 
+// Function to drop all PostgreSQL tables
+void drop_all_postgresql_tables(PGconn* conn)
+{
+  const char* dropUsersTableQuery = "DROP TABLE IF EXISTS users";
+  const char* dropFilesTableQuery = "DROP TABLE IF EXISTS files";
+  execute_query_postgresql(conn, dropFilesTableQuery);
+  execute_query_postgresql(conn, dropUsersTableQuery);
+}
+
 // Function to release resources and close the PostgreSQL connection
 void close_postgresql_connection(PGconn* conn)
 {

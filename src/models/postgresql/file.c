@@ -28,6 +28,22 @@ PGresult* get_all_files(PGconn* pgconn) {
     return result;
 }
 
+PGresult* get_file_by_name(PGconn* conn, const char* filename)
+{
+    // Prepare the SQL statement with appropriate placeholders for the values
+    const char* select_query = "SELECT * FROM files WHERE filename = $1";
+    
+    // Create the parameter values array
+    const char* values[1];
+    values[0] = filename;
+    
+    // Execute the prepared statement with the parameter values
+    PGresult* result = PQexecParams(conn, select_query, 1, NULL, values, NULL, NULL, 0);
+    
+    // Return the result set to the caller
+    return result;
+}
+
 PGresult* get_file_by_id(PGconn* pgconn, int file_id) {
     // Prepare the SQL statement with appropriate placeholders for the ID value
     const char* select_query = "SELECT * FROM files WHERE file_id = $1";

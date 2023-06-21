@@ -27,6 +27,7 @@ USER_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(USER_SRCS))
 all: $(SERVER_TARGET)
 
 $(SERVER_TARGET): $(SERVER_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS)
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
@@ -40,6 +41,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/models/%.c
 test: $(TEST_MODEL_TARGET)
 
 $(TEST_MODEL_TARGET): $(TEST_MODEL_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS)
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:

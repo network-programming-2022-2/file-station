@@ -76,7 +76,7 @@ PGresult* get_user_by_id(PGconn* pgconn, int user_id) {
     return result;
 }
 
-PGresult* get_user_by_username(PGconn* pgconn, char* username) {
+PGresult* get_user_by_username(PGconn* pgconn,const char* username) {
     // Prepare the SQL statement with appropriate placeholders for the ID value
     const char* select_query = "SELECT * FROM users WHERE username = $1";
     

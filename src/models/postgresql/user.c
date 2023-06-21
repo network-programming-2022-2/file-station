@@ -1,6 +1,6 @@
 #include "user.h"
 
-void insert_user(PGconn* pgconn, User user) {
+void insert_user(User user) {
     // Prepare the SQL statement with appropriate placeholders for the values
     const char* insert_query = "INSERT INTO users (username, password, wrong_attempts, status, is_login) VALUES ($1, $2, $3, $4, $5)";
     
@@ -23,7 +23,7 @@ void insert_user(PGconn* pgconn, User user) {
     PQclear(result);
 }
 
-PGresult* get_all_users(PGconn* pgconn) {
+PGresult* get_all_users() {
     // Execute a SELECT query to retrieve all records from the table
     const char* select_query = "SELECT * FROM users";
     PGresult* result = PQexec(pgconn, select_query);
@@ -32,7 +32,7 @@ PGresult* get_all_users(PGconn* pgconn) {
     return result;
 }
 
-PGresult* get_users_by_status(PGconn* conn, int status) 
+PGresult* get_users_by_status(int status) 
 {
   // Prepare the SQL statement with appropriate placeholders for the values
   const char* select_query = "SELECT * FROM users WHERE status = $1";
@@ -40,11 +40,11 @@ PGresult* get_users_by_status(PGconn* conn, int status)
   char status_str[10];
   snprintf(status_str, sizeof(status_str), "%d", status);
   values[0] = status_str;
-  PGresult* result = PQexecParams(conn, select_query, 1, NULL, values, NULL, NULL, 0);
+  PGresult* result = PQexecParams(pgconn, select_query, 1, NULL, values, NULL, NULL, 0);
   return result;
 }
 
-PGresult* get_users_by_status_and_is_login(PGconn* conn, int status, int is_login)
+PGresult* get_users_by_status_and_is_login(int status, int is_login)
 {
   // Prepare the SQL statement with appropriate placeholders for the values
   const char* select_query = "SELECT * FROM users WHERE status = $1 AND is_login = $2";
@@ -55,11 +55,11 @@ PGresult* get_users_by_status_and_is_login(PGconn* conn, int status, int is_logi
   char is_login_str[10];
   snprintf(is_login_str, sizeof(is_login_str), "%d", is_login);
   values[1] = is_login_str;
-  PGresult* result = PQexecParams(conn, select_query, 2, NULL, values, NULL, NULL, 0);
+  PGresult* result = PQexecParams(pgconn, select_query, 2, NULL, values, NULL, NULL, 0);
   return result;
 }
 
-PGresult* get_user_by_id(PGconn* pgconn, int user_id) {
+PGresult* get_user_by_id(int user_id) {
     // Prepare the SQL statement with appropriate placeholders for the ID value
     const char* select_query = "SELECT * FROM users WHERE user_id = $1";
     
@@ -76,7 +76,7 @@ PGresult* get_user_by_id(PGconn* pgconn, int user_id) {
     return result;
 }
 
-PGresult* get_user_by_username(PGconn* pgconn,const char* username) {
+PGresult* get_user_by_username(const char* username) {
     // Prepare the SQL statement with appropriate placeholders for the ID value
     const char* select_query = "SELECT * FROM users WHERE username = $1";
     
@@ -91,7 +91,7 @@ PGresult* get_user_by_username(PGconn* pgconn,const char* username) {
     return result;
 }
 
-void update_user_by_id(PGconn* pgconn, int user_id, User new_user) {
+void update_user_by_id(int user_id, User new_user) {
     // Prepare the SQL statement with appropriate placeholders for the ID value and new values
     const char* update_query = "UPDATE users SET username = $1, password = $2, wrong_attempts = $3, status = $4, is_login = $5 WHERE user_id = $6";
     
@@ -117,7 +117,7 @@ void update_user_by_id(PGconn* pgconn, int user_id, User new_user) {
     PQclear(result);
 }
 
-void delete_user_by_id(PGconn* pgconn, int user_id) {
+void delete_user_by_id(int user_id) {
     // Prepare the SQL statement with appropriate placeholders for the ID value
     const char* delete_query = "DELETE FROM users WHERE user_id = $1";
     
@@ -132,7 +132,7 @@ void delete_user_by_id(PGconn* pgconn, int user_id) {
     PQclear(result);
 }
 
-void delete_all_users(PGconn* pgconn) {
+void delete_all_users() {
     // Execute a DELETE query to remove all records from the table
     const char* delete_query = "DELETE FROM users";
     PGresult* result = PQexec(pgconn, delete_query);

@@ -19,26 +19,26 @@ PGconn* connect_to_postgresql(const DatabaseConnection* connection)
 }
 
 // Function to initialize a PostgreSQL database
-void initialize_postgresql(PGconn* conn)
+void initialize_postgresql()
 {
     const char* createUsersTableQuery = 
       "CREATE TABLE IF NOT EXISTS users (user_id SERIAL PRIMARY KEY, username VARCHAR(255), password VARCHAR(255), wrong_attempts INT, status INT, is_login INT)";
-    PGresult* result = PQexec(conn, createUsersTableQuery);
+    PGresult* result = PQexec(pgconn, createUsersTableQuery);
     PQclear(result);
     
     const char* createFilesTableQuery = "CREATE TABLE IF NOT EXISTS files (file_id SERIAL PRIMARY KEY, filename VARCHAR(255), user_id INT, downloaded_number INT, FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE)";
-    result = PQexec(conn, createFilesTableQuery);
+    result = PQexec(pgconn, createFilesTableQuery);
     PQclear(result);
 }
 
 // Function to execute a PostgreSQL query
-PGresult* execute_query_postgresql(PGconn* conn, const char* query) 
+PGresult* execute_query_postgresql(const char* query) 
 {
-  PGresult* result = PQexec(conn, query);
+  PGresult* result = PQexec(pgconn, query);
   
   if (PQresultStatus(result) != PGRES_COMMAND_OK && PQresultStatus(result) != PGRES_TUPLES_OK) 
   {
-    fprintf(stderr, "Query execution failed: %s\n", PQerrorMessage(conn));
+    fprintf(stderr, "Query execution failed: %s\n", PQerrorMessage(pgconn));
     PQclear(result);
     return NULL;
   }
@@ -71,16 +71,16 @@ const char* get_cell_value_postgresql(PGresult* result, int row_number, int colu
 }
 
 // Function to drop all PostgreSQL tables
-void drop_all_postgresql_tables(PGconn* conn)
+void drop_all_postgresql_tables()
 {
   const char* dropUsersTableQuery = "DROP TABLE IF EXISTS users";
   const char* dropFilesTableQuery = "DROP TABLE IF EXISTS files";
-  execute_query_postgresql(conn, dropFilesTableQuery);
-  execute_query_postgresql(conn, dropUsersTableQuery);
+  execute_query_postgresql(dropFilesTableQuery);
+  execute_query_postgresql(dropUsersTableQuery);
 }
 
 // Function to release resources and close the PostgreSQL connection
-void close_postgresql_connection(PGconn* conn)
+void close_postgresql_connection()
 {
-  PQfinish(conn);
+  PQfinish(pgconn);
 }

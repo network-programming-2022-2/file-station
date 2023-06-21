@@ -20,4 +20,22 @@ typedef struct {
     const char* password;
 } DatabaseConnection;
 
+typedef struct File {
+  int file_id;
+  char* filename;
+  int user_id;
+  int downloaded_number;
+} File;
+
+typedef struct {
+    int user_id;
+    char* username;
+    char* password;
+    int wrong_attempts;
+    int status;
+    int is_login;
+} User;
+
+extern PGconn* pgconn;
+
 #endif  // COMMON_H

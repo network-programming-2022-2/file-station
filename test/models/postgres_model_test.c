@@ -4,20 +4,22 @@
 #include "../../src/models/postgresql/file.h"
 #include "../../src/models/postgresql/user.h"
 
-void test_user_management(PGconn* pgconn) {
+PGconn* pgconn = NULL;
+
+void test_user_management() {
     // Insert sample users
     User user1 = {1, "user1", "password1", 0, 1, 1};
     User user2 = {2, "user2", "password2", 0, 1, 1};
     User user3 = {3, "user3", "password3", 0, 1, 1};
     User user4 = {4, "user4", "password4", 0, 1, 1};
 
-    insert_user(pgconn, user1);
-    insert_user(pgconn, user2);
-    insert_user(pgconn, user3);
-    insert_user(pgconn, user4);
+    insert_user(user1);
+    insert_user(user2);
+    insert_user(user3);
+    insert_user(user4);
 
     // Get all users
-    PGresult* all_users_result = get_all_users(pgconn);
+    PGresult* all_users_result = get_all_users();
     int row_count = get_row_count_postgresql(all_users_result);
     int column_count = get_column_count_postgresql(all_users_result);
     printf("All Users:\n");
@@ -33,7 +35,7 @@ void test_user_management(PGconn* pgconn) {
 
     // Get user by ID
     int target_user_id = 3;
-    PGresult* user_by_id_result = get_user_by_id(pgconn, target_user_id);
+    PGresult* user_by_id_result = get_user_by_id(target_user_id);
     row_count = get_row_count_postgresql(user_by_id_result);
     column_count = get_column_count_postgresql(user_by_id_result);
     printf("\nUser with ID %d:\n", target_user_id);
@@ -50,10 +52,10 @@ void test_user_management(PGconn* pgconn) {
     // Update user by ID
     int update_user_id = 2;
     User updated_user = {update_user_id, "new_username", "new_password", 2, 0, 0};
-    update_user_by_id(pgconn, update_user_id, updated_user);
+    update_user_by_id(update_user_id, updated_user);
 
     // Get updated user by ID
-    PGresult* updated_user_result = get_user_by_id(pgconn, update_user_id);
+    PGresult* updated_user_result = get_user_by_id(update_user_id);
     row_count = get_row_count_postgresql(updated_user_result);
     column_count = get_column_count_postgresql(updated_user_result);
     printf("\nUpdated User with ID %d:\n", update_user_id);
@@ -69,10 +71,10 @@ void test_user_management(PGconn* pgconn) {
 
     // Delete user by ID
     int delete_user_id = 1;
-    delete_user_by_id(pgconn, delete_user_id);
+    delete_user_by_id(delete_user_id);
 
     // Get all users after deletion
-    all_users_result = get_all_users(pgconn);
+    all_users_result = get_all_users();
     row_count = get_row_count_postgresql(all_users_result);
     column_count = get_column_count_postgresql(all_users_result);
     printf("\nAll Users after deletion:\n");
@@ -87,18 +89,18 @@ void test_user_management(PGconn* pgconn) {
     PQclear(all_users_result);
 }
 
-void test_file_management(PGconn* pgconn) {
+void test_file_management() {
     // Insert sample files
     File file1 = {1, "file1.txt", 1, 1};
     File file2 = {2, "file2.txt", 2, 2};
     File file3 = {3, "file3.txt", 3, 3};
 
-    insert_file(pgconn, file1);
-    insert_file(pgconn, file2);
-    insert_file(pgconn, file3);
+    insert_file(file1);
+    insert_file(file2);
+    insert_file(file3);
 
     // Get all files
-    PGresult* all_files_result = get_all_files(pgconn);
+    PGresult* all_files_result = get_all_files();
     int row_count = get_row_count_postgresql(all_files_result);
     int column_count = get_column_count_postgresql(all_files_result);
     printf("\nAll Files:\n");
@@ -114,10 +116,10 @@ void test_file_management(PGconn* pgconn) {
 
     // Delete file by ID
     int delete_file_id = 2;
-    delete_file_by_id(pgconn, delete_file_id);
+    delete_file_by_id(delete_file_id);
 
     // Get all files after deletion
-    all_files_result = get_all_files(pgconn);
+    all_files_result = get_all_files();
     row_count = get_row_count_postgresql(all_files_result);
     column_count = get_column_count_postgresql(all_files_result);
     printf("\nAll Files after deletion:\n");
@@ -140,22 +142,22 @@ int main() {
     connection.user = "postgres";
     connection.password = "";
     connection.dbname = "postgres";
-    PGconn* pgconn = connect_to_postgresql(&connection);
+    pgconn = connect_to_postgresql(&connection);
 
     // Initialize the database tables
-    initialize_postgresql(pgconn);
+    initialize_postgresql();
 
     // Test user management
-    test_user_management(pgconn);
+    test_user_management();
 
     // Test file management
-    test_file_management(pgconn);
+    test_file_management();
 
     // Drop the database tables
-    drop_all_postgresql_tables(pgconn);
+    drop_all_postgresql_tables();
   
     // Cleanup and close the database connection
-    close_postgresql_connection(pgconn);
+    close_postgresql_connection();
 
     return 0;
 }

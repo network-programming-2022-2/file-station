@@ -7,13 +7,13 @@
 void insert_file(File file);
 
 // Function to retrieve all file records from the table
-PGresult* get_all_files();
+File* get_all_files();
 
 // Function to retrieve a specific file record from the table by its name
-PGresult* get_file_by_name(const char* filename);
+File* get_file_by_name(const char* filename);
 
 // Function to retrieve a specific file record from the table
-PGresult* get_file_by_id(int file_id);
+File get_file_by_id(int file_id);
 
 // Function to update a specific file record in the table
 void update_file_by_id(int file_id, File new_file);

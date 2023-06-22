@@ -19,47 +19,116 @@ void insert_file(File file) {
     PQclear(result);
 }
 
-PGresult* get_all_files() {
+File* get_all_files() {
     // Execute a SELECT query to retrieve all records from the table
     const char* select_query = "SELECT * FROM files";
     PGresult* result = PQexec(pgconn, select_query);
-    
-    // Return the result set to the caller
-    return result;
+
+    // Get the number of rows in the result set
+    int num_rows = PQntuples(result);
+    if (num_rows == 0) {
+        return NULL;
+    }
+
+    // Create an array of File structs
+    File* files = malloc(num_rows * sizeof(File));
+
+    // Iterate over the result set and populate the array
+    for (int i = 0; i < num_rows; i++) {
+        File file;
+
+        // Retrieve the values from the result set
+        file.file_id = atoi(PQgetvalue(result, i, 0));
+        file.filename = PQgetvalue(result, i, 1);
+        file.user_id = atoi(PQgetvalue(result, i, 2));
+        file.downloaded_number = atoi(PQgetvalue(result, i, 3));
+
+        // Assign the file struct to the array
+        files[i] = file;
+    }
+
+    // Clear the result set
+    PQclear(result);
+
+    // Return the array of File structs
+    return files;
 }
 
-PGresult* get_file_by_name(const char* filename)
-{
+File* get_file_by_name(const char* filename) {
     // Prepare the SQL statement with appropriate placeholders for the values
     const char* select_query = "SELECT * FROM files WHERE filename = $1";
-    
+
     // Create the parameter values array
     const char* values[1];
     values[0] = filename;
-    
+
     // Execute the prepared statement with the parameter values
     PGresult* result = PQexecParams(pgconn, select_query, 1, NULL, values, NULL, NULL, 0);
-    
-    // Return the result set to the caller
-    return result;
+
+    // Get the number of rows in the result set
+    int num_rows = PQntuples(result);
+    if (num_rows == 0) {
+        return NULL;
+    }
+
+    // Create an array of File structs
+    File* files = malloc(num_rows * sizeof(File));
+
+    // Iterate over the result set and populate the array
+    for (int i = 0; i < num_rows; i++) {
+        File file;
+
+        // Retrieve the values from the result set
+        file.file_id = atoi(PQgetvalue(result, i, 0));
+        file.filename = PQgetvalue(result, i, 1);
+        file.user_id = atoi(PQgetvalue(result, i, 2));
+        file.downloaded_number = atoi(PQgetvalue(result, i, 3));
+
+        // Assign the file struct to the array
+        files[i] = file;
+    }
+
+    // Clear the result set
+    PQclear(result);
+
+    // Return the array of File structs
+    return files;
 }
 
-PGresult* get_file_by_id(int file_id) {
+File get_file_by_id(int file_id) {
     // Prepare the SQL statement with appropriate placeholders for the ID value
     const char* select_query = "SELECT * FROM files WHERE file_id = $1";
-    
+
     // Create the parameter values array
     const char* values[1];
     char file_id_str[10];
     snprintf(file_id_str, sizeof(file_id_str), "%d", file_id);
     values[0] = file_id_str;
-    
+
     // Execute the prepared statement with the parameter values
     PGresult* result = PQexecParams(pgconn, select_query, 1, NULL, values, NULL, NULL, 0);
-    
-    // Return the result set to the caller
-    return result;
+
+    // Get the number of rows in the result set
+    int num_rows = PQntuples(result);
+    if (num_rows == 0) {
+        File file = {0, "", 0, 0};
+        return file;
+    }
+
+    // Retrieve the values from the result set
+    File file;
+    file.file_id = atoi(PQgetvalue(result, 0, 0));
+    file.filename = PQgetvalue(result, 0, 1);
+    file.user_id = atoi(PQgetvalue(result, 0, 2));
+    file.downloaded_number = atoi(PQgetvalue(result, 0, 3));
+
+    // Clear the result set
+    PQclear(result);
+
+    // Return the File struct
+    return file;
 }
+
 
 void update_file_by_id(int file_id, File new_file) {
     // Prepare the SQL statement with appropriate placeholders for the ID value and new values

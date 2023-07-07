@@ -26,7 +26,7 @@ void initialize_postgresql()
     PGresult* result = PQexec(pgconn, createUsersTableQuery);
     PQclear(result);
     
-    const char* createFilesTableQuery = "CREATE TABLE IF NOT EXISTS files (file_id SERIAL PRIMARY KEY, filename VARCHAR(255), user_id INT, downloaded_number INT, FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE)";
+    const char* createFilesTableQuery = "CREATE TABLE IF NOT EXISTS files (file_id SERIAL PRIMARY KEY, filename VARCHAR(255), user_id INT, downloaded_numbers INT, FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE)";
     result = PQexec(pgconn, createFilesTableQuery);
     PQclear(result);
 }

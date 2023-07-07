@@ -11,9 +11,12 @@ SERVER_SRCS = $(SRCDIR)/server.c
 SERVER_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SERVER_SRCS))
 SERVER_TARGET = $(BINDIR)/server
 
-TEST_MODEL_SRCS = $(TESTDIR)/models/postgres_model_test.c
+TEST_MODEL_SRCS = $(TESTDIR)/models/pg_test.c
 TEST_MODEL_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(TEST_MODEL_SRCS))
-TEST_MODEL_TARGET = $(BINDIR)/test/postgres_model_test
+TEST_MODEL_TARGET = $(BINDIR)/test/pg_test
+
+POSTGRESQL_TEST_SRCS = $(TESTDIR)/models/postgresql.c
+POSTGRESQL_TEST_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(POSTGRESQL_TEST_SRCS))
 
 POSTGRESQL_SRCS = $(SRCDIR)/models/postgresql/postgresql.c
 POSTGRESQL_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(POSTGRESQL_SRCS))
@@ -32,17 +35,17 @@ $(SERVER_TARGET): $(SERVER_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -g -c $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/models/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -g -c $< -o $@
 
 test: $(TEST_MODEL_TARGET)
 
-$(TEST_MODEL_TARGET): $(TEST_MODEL_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS)
+$(TEST_MODEL_TARGET): $(TEST_MODEL_OBJS) $(POSTGRESQL_TEST_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -g -o $@ $^ $(LDFLAGS)
 
 clean:
 	@rm -rf $(OBJDIR) $(BINDIR)

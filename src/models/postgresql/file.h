@@ -7,10 +7,10 @@
 void insert_file(File file);
 
 // Function to retrieve all file records from the table
-File* get_all_files();
+FileResult get_all_files();
 
 // Function to retrieve a specific file record from the table by its name
-File* get_file_by_name(const char* filename);
+FileResult get_file_by_name(const char* filename);
 
 // Function to retrieve a specific file record from the table
 File get_file_by_id(int file_id);

@@ -24,8 +24,13 @@ typedef struct File {
   int file_id;
   char* filename;
   int user_id;
-  int downloaded_number;
+  int downloaded_numbers;
 } File;
+
+typedef struct {
+    File* files;
+    int num_files;
+} FileResult;
 
 typedef struct {
     int user_id;
@@ -35,6 +40,11 @@ typedef struct {
     int status;
     int is_login;
 } User;
+
+typedef struct {
+    User* users;
+    int num_users;
+} UserResult;
 
 extern PGconn* pgconn;
 

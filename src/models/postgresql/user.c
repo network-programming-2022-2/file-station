@@ -23,7 +23,7 @@ void insert_user(User user) {
     PQclear(result);
 }
 
-User* get_all_users() {
+UserResult get_all_users() {
     // Execute a SELECT query to retrieve all records from the table
     const char* select_query = "SELECT * FROM users";
     PGresult* result = PQexec(pgconn, select_query);
@@ -31,7 +31,10 @@ User* get_all_users() {
     // Get the number of rows in the result set
     int num_rows = PQntuples(result);
     if (num_rows == 0) {
-        return NULL;
+        UserResult user_result;
+        user_result.users = NULL;
+        user_result.num_users = 0;
+        return user_result;
     }
 
     // Create an array of User structs
@@ -56,11 +59,13 @@ User* get_all_users() {
     // Clear the result set
     PQclear(result);
 
-    // Return the array of User structs
-    return users;
+    UserResult user_result;
+    user_result.users = users;
+    user_result.num_users = num_rows;
+    return user_result;
 }
 
-User* get_users_by_status(int status) {
+UserResult get_users_by_status(int status) {
     // Prepare the SQL statement with appropriate placeholders for the values
     const char* select_query = "SELECT * FROM users WHERE status = $1";
     const char* values[1];
@@ -72,7 +77,10 @@ User* get_users_by_status(int status) {
     // Get the number of rows in the result set
     int num_rows = PQntuples(result);
     if (num_rows == 0) {
-        return NULL;
+        UserResult user_result;
+        user_result.users = NULL;
+        user_result.num_users = 0;
+        return user_result;
     }
 
     // Create an array of User structs
@@ -97,11 +105,13 @@ User* get_users_by_status(int status) {
     // Clear the result set
     PQclear(result);
 
-    // Return the array of User structs
-    return users;
+    UserResult user_result;
+    user_result.users = users;
+    user_result.num_users = num_rows;
+    return user_result;
 }
 
-User* get_users_by_status_and_is_login(int status, int is_login) {
+UserResult get_users_by_status_and_is_login(int status, int is_login) {
     // Prepare the SQL statement with appropriate placeholders for the values
     const char* select_query = "SELECT * FROM users WHERE status = $1 AND is_login = $2";
     const char* values[2];
@@ -116,7 +126,10 @@ User* get_users_by_status_and_is_login(int status, int is_login) {
     // Get the number of rows in the result set
     int num_rows = PQntuples(result);
     if (num_rows == 0) {
-        return NULL;
+        UserResult user_result;
+        user_result.users = NULL;
+        user_result.num_users = 0;
+        return user_result;
     }
 
     // Create an array of User structs
@@ -141,8 +154,10 @@ User* get_users_by_status_and_is_login(int status, int is_login) {
     // Clear the result set
     PQclear(result);
 
-    // Return the array of User structs
-    return users;
+    UserResult user_result;
+    user_result.users = users;
+    user_result.num_users = num_rows;
+    return user_result;
 }
 
 User get_user_by_id(int user_id) {

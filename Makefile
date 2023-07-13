@@ -11,6 +11,10 @@ SERVER_SRCS = $(SRCDIR)/server.c
 SERVER_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SERVER_SRCS))
 SERVER_TARGET = $(BINDIR)/server
 
+CLIENT_SRCS = $(SRCDIR)/client.c
+CLIENT_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(CLIENT_SRCS))
+CLIENT_TARGET = $(BINDIR)/client
+
 TEST_MODEL_SRCS = $(TESTDIR)/models/pg_test.c
 TEST_MODEL_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(TEST_MODEL_SRCS))
 TEST_MODEL_TARGET = $(BINDIR)/test/pg_test
@@ -21,15 +25,22 @@ POSTGRESQL_TEST_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(POSTGRESQL_TES
 POSTGRESQL_SRCS = $(SRCDIR)/models/postgresql/postgresql.c
 POSTGRESQL_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(POSTGRESQL_SRCS))
 
+USER_CONTROLLER_SRCS = $(SRCDIR)/controllers/user_controller.c
+USER_CONTROLLER_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(USER_CONTROLLER_SRCS))
+
 FILE_SRCS = $(SRCDIR)/models/postgresql/file.c
 FILE_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(FILE_SRCS))
 
 USER_SRCS = $(SRCDIR)/models/postgresql/user.c
 USER_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(USER_SRCS))
 
-all: $(SERVER_TARGET)
+all: $(SERVER_TARGET) $(CLIENT_TARGET)
 
-$(SERVER_TARGET): $(SERVER_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS)
+$(SERVER_TARGET): $(SERVER_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS) $(USER_CONTROLLER_OBJS)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(CLIENT_TARGET): $(CLIENT_OBJS)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 

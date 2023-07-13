@@ -47,7 +47,7 @@ void get_all_files_test() {
 void get_file_by_name_test() {
     printf("Testing get_file_by_name() function...\n");
     const char* filename = "file2.txt";
-    FileResult file_by_name = get_file_by_name(filename);
+    FileResult file_by_name = get_files_by_name(filename);
     int num_files = file_by_name.num_files;
     for (int i = 0; i < num_files; i++) {
         printf("File: %d, %s, %d, %d\n", file_by_name.files[i].file_id, file_by_name.files[i].filename,
@@ -88,11 +88,11 @@ void delete_file_by_id_test() {
 
 void test_file_manager() {
     insert_file_test();
-    // get_all_files_test();
-    // get_file_by_name_test();
-    // get_file_by_id_test();
-    // update_file_by_id_test();
-    // delete_file_by_id_test();
+    get_all_files_test();
+    get_file_by_name_test();
+    get_file_by_id_test();
+    update_file_by_id_test();
+    delete_file_by_id_test();
   
     printf("File manager tests completed.\n");
 }

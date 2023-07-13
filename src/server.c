@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include "models/postgresql/postgresql.h"
 #include "controllers/user_controller.h"
+#include "controllers/file_controller.h"
 
 #define BACKLOG 20   /* Number of allowed connections */
 #define BUFF_SIZE 1024
@@ -18,11 +19,13 @@
 typedef struct {
   int connfd;
   char username[50];
+  char filename[BUFF_SIZE];
 } Client;
 void extract_username_passwd(char buffer[], char username[], char password[], char* delimiter);
 void *login_handler(void *);
 char** extract_information(const char* str, int* count);
 void cleanup_and_close_database(); 
+void* file_upload_handler(void* arg); 
 
 PGconn* pgconn = NULL;
 Client clients[MAX_CLIENTS];
@@ -145,7 +148,7 @@ void *login_handler(void *arg)
       if (bytes_sent < 0)
         perror("\n[server]: ");
 
-      printf("[server]: %s\n\n", message);
+      printf("%s\n\n", message);
       break;
 
       case 2:
@@ -184,13 +187,71 @@ void *login_handler(void *arg)
       bytes_sent = send(connfd, message, BUFF_SIZE, 0);
       if (bytes_sent < 0)
         perror("\n[server]: ");
-      printf("[server]: %s\n\n", message);
+      printf("%s\n\n", message);
+      break;
 
+      case 99:
+      int check;
+      for (int i = 0; i < client_index; i++)
+      {
+        if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
+        {
+          check = 1;
+
+          // Create a file update struct to pass to the file_update_handler thread
+          strcpy(clients[i].filename, info_array[3]);
+
+          // Create a new thread to handle the file update
+          pthread_t file_update_tid;
+          pthread_create(&file_update_tid, NULL, file_upload_handler, &clients[i]);
+          break;
+        }
+      }
+      if (check == 0)
+      {
+        strcpy(message, "[server]: Have to login first!\n");
+        bytes_sent = send(connfd, message, BUFF_SIZE, 0);
+        if (bytes_sent < 0)
+          perror("\n[server]: ");
+        printf("%s\n\n", message);
+      }
       break;
     }
   }
  
   close(connfd);
+  return NULL;
+}
+
+// Function to handle file updates
+void* file_upload_handler(void* arg) {
+  Client* client = (Client*)arg;
+  int connfd = client->connfd;
+  char username[50];
+  char filename[BUFF_SIZE];
+  strcpy(filename, client->filename);
+  strcpy(username, client->username);
+  char message[BUFF_SIZE];
+  int bytes_sent;
+
+  // Process the file update (send to the database, perform any necessary operations, etc.)
+  printf("[server]: Received file from client %s: %s\n", username, filename);
+
+  bool ok = upload_file(filename, username);
+  if (!ok)
+  {
+    strcpy(message, "[server]: File upload failed!\n");
+  }
+  else
+  {
+    strcpy(message, "[server]: File upload successfully!\n");
+  }
+
+  bytes_sent = send(connfd, message, BUFF_SIZE, 0);
+  if (bytes_sent < 0)
+    perror("\n[server]: ");
+  printf("%s\n\n", message);
+
   return NULL;
 }
 

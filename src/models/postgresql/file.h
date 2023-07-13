@@ -10,7 +10,10 @@ void insert_file(File file);
 FileResult get_all_files();
 
 // Function to retrieve a specific file record from the table by its name
-FileResult get_file_by_name(const char* filename);
+FileResult get_files_by_name(const char* filename);
+
+// Function to retrieve files by user_id 
+FileResult get_files_by_user_id(int user_id);
 
 // Function to retrieve a specific file record from the table
 File get_file_by_id(int file_id);

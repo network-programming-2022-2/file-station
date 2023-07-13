@@ -28,6 +28,9 @@ POSTGRESQL_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(POSTGRESQL_SRCS))
 USER_CONTROLLER_SRCS = $(SRCDIR)/controllers/user_controller.c
 USER_CONTROLLER_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(USER_CONTROLLER_SRCS))
 
+FILE_CONTROLLER_SRCS = $(SRCDIR)/controllers/file_controller.c
+FILE_CONTROLLER_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(FILE_CONTROLLER_SRCS))
+
 FILE_SRCS = $(SRCDIR)/models/postgresql/file.c
 FILE_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(FILE_SRCS))
 
@@ -36,13 +39,13 @@ USER_OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(USER_SRCS))
 
 all: $(SERVER_TARGET) $(CLIENT_TARGET)
 
-$(SERVER_TARGET): $(SERVER_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS) $(USER_CONTROLLER_OBJS)
+$(SERVER_TARGET): $(SERVER_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS) $(USER_CONTROLLER_OBJS) $(FILE_CONTROLLER_OBJS)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(CLIENT_TARGET): $(CLIENT_OBJS)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -pthread
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(dir $@)

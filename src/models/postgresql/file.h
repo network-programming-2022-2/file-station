@@ -24,6 +24,9 @@ void update_file_by_id(int file_id, File new_file);
 // Function to delete a specific file record from the table
 void delete_file_by_id(int file_id);
 
+// Function to delete a specific file record from the table by filename and user_id
+File get_file_by_filename_and_user_id(const char* filename, int user_id);
+
 // Function to delete all file records from the table
 void delete_all_files();
 

@@ -20,6 +20,7 @@ typedef struct {
   int connfd;
   char username[50];
   char filename[BUFF_SIZE];
+  char method[BUFF_SIZE];
 } Client;
 void extract_username_passwd(char buffer[], char username[], char password[], char* delimiter);
 void *login_handler(void *);
@@ -200,6 +201,7 @@ void *login_handler(void *arg)
 
           // Create a file update struct to pass to the file_update_handler thread
           strcpy(clients[i].filename, info_array[3]);
+          strcpy(clients[i].method, info_array[1]);
 
           // Create a new thread to handle the file update
           pthread_t file_update_tid;
@@ -229,22 +231,32 @@ void* file_upload_handler(void* arg) {
   int connfd = client->connfd;
   char username[50];
   char filename[BUFF_SIZE];
+  char method[BUFF_SIZE];
   strcpy(filename, client->filename);
   strcpy(username, client->username);
+  strcpy(method, client->method);
   char message[BUFF_SIZE];
   int bytes_sent;
 
   // Process the file update (send to the database, perform any necessary operations, etc.)
   printf("[server]: Received file from client %s: %s\n", username, filename);
 
-  bool ok = upload_file(filename, username);
-  if (!ok)
+  if (strcmp(method, "upload") == 0)
   {
-    strcpy(message, "[server]: File upload failed!\n");
+    bool ok = upload_file(filename, username);
+    if (!ok)
+      strcpy(message, "[server]: File upload failed!\n");
+    else
+      strcpy(message, "[server]: File upload successfully!\n");
+
   }
-  else
+  else if (strcmp(method, "delete") == 0)
   {
-    strcpy(message, "[server]: File upload successfully!\n");
+    bool ok = delete_file(filename, username);
+    if (!ok)
+      strcpy(message, "[server]: File deletion failed!\n");
+    else
+      strcpy(message, "[server]: File deletion successfully!\n");
   }
 
   bytes_sent = send(connfd, message, BUFF_SIZE, 0);

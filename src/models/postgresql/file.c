@@ -158,6 +158,39 @@ FileResult get_files_by_name(const char* filename) {
     return file_result;
 }
 
+File get_file_by_filename_and_user_id(const char* filename, int user_id)
+{
+    // Prepare the SQL statement with appropriate placeholders for the values
+    const char* select_query = "SELECT * FROM files WHERE filename = $1 AND user_id = $2";
+
+    // Create the parameter values array
+    const char* values[2];
+    values[0] = filename;
+    char user_id_str[10];
+    snprintf(user_id_str, sizeof(user_id_str), "%d", user_id);
+    values[1] = user_id_str;
+
+    // Execute the prepared statement with the parameter values
+    PGresult* result = PQexecParams(pgconn, select_query, 2, NULL, values, NULL, NULL, 0);
+
+    // Get the number of rows in the result set
+    int num_rows = PQntuples(result);
+    if (num_rows == 0) {
+        File file = {0, "", 0, 0};
+        return file;
+    }
+
+    // Retrieve the values from the result set
+    File file;
+    file.file_id = atoi(PQgetvalue(result, 0, 0));
+    file.filename = PQgetvalue(result, 0, 1);
+    file.user_id = atoi(PQgetvalue(result, 0, 2));
+    file.downloaded_numbers = atoi(PQgetvalue(result, 0, 3));
+
+    // Assign the file struct to the array
+    return file;
+}
+
 File get_file_by_id(int file_id) {
     // Prepare the SQL statement with appropriate placeholders for the ID value
     const char* select_query = "SELECT * FROM files WHERE file_id = $1";

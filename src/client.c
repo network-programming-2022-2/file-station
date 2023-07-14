@@ -114,6 +114,25 @@ void* inotify_thread(void* arg) {
                     }
                     else {
                         printf("\nThe file %s was deleted.\n", event->name);
+
+                        // Send the file name to the server
+                        const char* del_info_array[] = { "99", "delete", username, event->name };
+
+                        int size = sizeof(del_info_array) / sizeof(del_info_array[0]);
+                        char* message = construct_string(del_info_array, size, delimiter);
+
+                        int bytes_sent = send(client_sock, message, strlen(message), 0);
+                        if (bytes_sent < 0) {
+                          printf("\nError! Can not send data to server! Client exit immediately!\n");
+                        }
+                        printf("%s\n", message);
+
+                        int bytes_received = recv(client_sock, buffer, BUFF_SIZE, 0);
+                        if (bytes_received < 0) {
+                          printf("\nError! Can not receive data from server! Client exit immediately!\n"); 
+                        }
+                        printf("%s\n", buffer);
+
                     }
                 }
                 else if (event->mask & IN_MODIFY) {

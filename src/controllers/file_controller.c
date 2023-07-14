@@ -16,3 +16,17 @@ bool upload_file(const char* filename, const char* username)
   insert_file(file);
   return true;
 }
+
+bool delete_file(const char* filename, const char* username)
+{
+  User user = get_user_by_username(username);
+  if (user.user_id == 0)
+    return false;
+
+  File file = get_file_by_filename_and_user_id(filename, user.user_id);
+  if (file.file_id == 0)
+    return false;
+  delete_file_by_id(file.file_id);
+
+  return true;
+}

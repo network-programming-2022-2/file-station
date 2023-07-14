@@ -9,6 +9,9 @@
 // Function to upload a file
 bool upload_file(const char* filename, const char* username);
 
+// Function to delete a file
+bool delete_file(const char* filename, const char* username);
+
 // // Function to check if a file exists
 // bool does_file_exist(const char* filename);
 

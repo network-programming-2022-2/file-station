@@ -163,15 +163,17 @@ int main(int argc, char* argv[]) {
     int msg_len, bytes_sent, bytes_received, bytes_read, total_bytes_sent, total_bytes_received;
     int port;
     char ip[INET_ADDRSTRLEN];
+    char path_to_be_watched[SIZE];
     const char* delimiter = ":";
 
-    if (argc != 3) {
-        printf("[ERROR]: The client needs to be bound to an IP address and a port.\n");
+    if (argc != 4) {
+        printf("[ERROR]: The client needs to be bound to an IP address a port, and a folder to trace changes.\n");
         exit(EXIT_FAILURE);
     }
     else {
         port = atoi(argv[2]);
         strcpy(ip, argv[1]);
+        strcpy(path_to_be_watched, argv[3]);
     }
 
     client_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -186,8 +188,6 @@ int main(int argc, char* argv[]) {
     }
 
     pthread_t inotify_tid;
-    char path_to_be_watched[SIZE];
-    strcpy(path_to_be_watched, "/home/nvt/2022-2/file-station");
     InotifyThreadArgs inotify_args;
     strcpy(inotify_args.path_to_watch, path_to_be_watched);
     inotify_args.client_sock = client_sock;

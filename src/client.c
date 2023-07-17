@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <sys/inotify.h>
 #include <fcntl.h>
+#include <sys/select.h>
 
 #define BUFF_SIZE 8192
 #define SIZE 1024
@@ -154,12 +155,18 @@ void* inotify_thread(void* arg) {
     pthread_exit(NULL);
 }
 
+int handle_download(char ip[INET_ADDRSTRLEN]);
+void *receive_thread(void *server_fd);
+void receiving(int server_fd);
+void sending(char ip[INET_ADDRSTRLEN], int sender_port);
+
 int main(int argc, char* argv[]) {
     int client_sock, choice;
     char buff[BUFF_SIZE];
     char username[SIZE];
     char password[SIZE];
     struct sockaddr_in server_addr;
+    
     int msg_len, bytes_sent, bytes_received, bytes_read, total_bytes_sent, total_bytes_received;
     int port;
     char ip[INET_ADDRSTRLEN];
@@ -201,11 +208,17 @@ int main(int argc, char* argv[]) {
 
         printf("Password: ");
         scanf("%s", password);
-
+        //
+        // const char *info_array1[] = { "1", "register", username, password };
+        // const char* login_array1[] = { "2", "login", username, password };
+        const char *info_array[4] = { "1", "register", username, password };
+        const char *login_array[4] = { "2", "login", username, password };
+        int size;
+        //
         switch (choice) {
             case 1:
-                const char* info_array[] = { "1", "register", username, password };
-                int size = sizeof(info_array) / sizeof(info_array[0]);
+                // info_array[4] = info_array1;
+                size = sizeof(info_array) / sizeof(info_array[0]);
                 char* constructed_string = construct_string(info_array, size, delimiter);
 
                 bytes_sent = send(client_sock, constructed_string, strlen(constructed_string), 0);
@@ -224,7 +237,7 @@ int main(int argc, char* argv[]) {
                 break;
 
             case 2:
-                const char* login_array[] = { "2", "login", username, password };
+                // login_array[4] = login_array1;
                 size = sizeof(info_array) / sizeof(login_array[0]);
                 constructed_string = construct_string(login_array, size, delimiter);
 
@@ -251,11 +264,22 @@ int main(int argc, char* argv[]) {
                   while (1) {
                     submenu();
                     int sub_choice;
+                    printf("after login: your choice ...\n");
                     scanf("%d", &sub_choice);
                     while (getchar() != '\n'); // Clear input buffer
 
                     if (sub_choice == 1) {
-                      break;
+                        printf("chua xong ...\n");
+                        break; // search
+
+                    }else if(sub_choice == 2){
+                        printf("download ...\n");
+                        handle_download(ip);
+                        break; // download
+                    }else{
+                        //logout
+                        printf("loging out...\n");
+                        break;
                     }
                   }
                   
@@ -295,4 +319,154 @@ char* construct_string(const char** info_array, int size, const char* delimiter)
     }
 
     return constructed_string;
+}
+
+int handle_download(char ip[]){
+    int port;
+    printf("Enter your port number:");
+    scanf("%d", &port);
+    
+    int server_fd, new_socket, valread;
+    struct sockaddr_in address;
+    
+    // Creating socket file descriptor
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = inet_addr(ip);
+    address.sin_port = htons(port);
+
+    //Printed the server socket addr and port
+    printf("IP address is: %s\n", inet_ntoa(address.sin_addr));
+    printf("port is: %d\n", (int)ntohs(address.sin_port));
+
+    // bind address and listen
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
+    {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+    if (listen(server_fd, 5) < 0)
+    {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+    
+    //Creating thread to keep listening request from other clients
+    int ch;
+    pthread_t tid;
+    pthread_create(&tid, NULL, &receive_thread, &server_fd); 
+    printf("\n**********\n");
+    sending(ip, port);
+    close(server_fd);
+}
+
+//Calling receiving every 2 seconds
+void *receive_thread(void *server_fd)
+{
+    int s_fd = *((int *)server_fd);
+    while (1)
+    {
+        sleep(2);
+        receiving(s_fd);
+    }
+}
+
+//Receiving messages on our port
+void receiving(int server_fd)
+{
+    struct sockaddr_in address;
+    int valread;
+    char buffer[2000] = {0};
+    int addrlen = sizeof(address);
+    fd_set current_sockets, ready_sockets;
+
+    //Initialize my current set
+    FD_ZERO(&current_sockets);
+    FD_SET(server_fd, &current_sockets);
+    int k = 0;
+    while (1)
+    {
+        k++;
+        ready_sockets = current_sockets;
+
+        if (select(FD_SETSIZE, &ready_sockets, NULL, NULL, NULL) < 0)
+        {
+            perror("Error");
+            exit(EXIT_FAILURE);
+        }
+
+        for (int i = 0; i < FD_SETSIZE; i++)
+        {
+            if (FD_ISSET(i, &ready_sockets))
+            {
+
+                if (i == server_fd)
+                {
+                    int client_socket;
+
+                    if ((client_socket = accept(server_fd, (struct sockaddr *)&address,
+                                                (socklen_t *)&addrlen)) < 0)
+                    {
+                        perror("accept");
+                        exit(EXIT_FAILURE);
+                    }
+                    FD_SET(client_socket, &current_sockets);
+                }
+                else
+                {
+                    valread = recv(i, buffer, sizeof(buffer), 0);
+                    printf("\n%s\n", buffer);
+                    FD_CLR(i, &current_sockets);
+                }
+            }
+        }
+
+        if (k == (FD_SETSIZE * 2))
+            break;
+    }
+}
+
+//Sending messages to port
+void sending(char ip[], int sender_port)
+{
+
+    char buffer[2000] = {0};
+    //Fetching port number
+    int PORT_server;
+
+    printf("Enter the port to send message:"); 
+    scanf("%d", &PORT_server);
+
+    int sock = 0, valread;
+    struct sockaddr_in serv_addr;
+    char hello[1024] = {0};
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("\n Socket creation error \n");
+        return;
+    }
+
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = inet_addr(ip);
+    serv_addr.sin_port = htons(PORT_server);
+
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        printf("\nConnection Failed \n");
+        return;
+    }
+
+    char dummy;
+    printf("Enter your message:");
+    scanf("%c", &dummy); //The buffer is our enemy
+    scanf("%[^\n]s", hello);
+    sprintf(buffer, "From: [PORT:%d] says: %s", sender_port, hello);
+    send(sock, buffer, sizeof(buffer), 0);
+    printf("\nMessage sent\n");
+    close(sock);
 }

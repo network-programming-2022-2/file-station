@@ -7,7 +7,7 @@ int main() {
   connection.host = "localhost";
   connection.port = "5432";
   connection.user = "postgres";
-  connection.password = "";
+  connection.password = "kytran";
   connection.dbname = "postgres";
   pgconn = connect_to_postgresql(&connection);
 

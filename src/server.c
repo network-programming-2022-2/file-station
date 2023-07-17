@@ -77,10 +77,10 @@ int main(int argc, char *argv[])
 	client = malloc(sin_size);
   
   DatabaseConnection connection;
-  connection.host = "localhost";
+  connection.host = "127.0.0.1";
   connection.port = "5432";
   connection.user = "postgres";
-  connection.password = "";
+  connection.password = "kytran";
   connection.dbname = "postgres";
   pgconn = connect_to_postgresql(&connection);
 
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 		if ((*connfd = accept(listenfd, (struct sockaddr *)client, &sin_size)) ==- 1)
 			perror("\n[server]: ");
 				
-		printf("[server]: You got a connection from %s\n\n", inet_ntoa(client->sin_addr) ); /* prints client's IP */
+		printf("[server]: You got a connection from %s - port: %d\n\n", inet_ntoa(client->sin_addr), (int)ntohs(client->sin_port) ); /* prints client's IP */
 		
 		/* For each client, spawns a thread, and the thread handles the new client */
 		pthread_create(&tid, NULL, &login_handler, connfd);	
@@ -132,7 +132,10 @@ void *login_handler(void *arg)
     char** info_array = extract_information(buff, &count);
 
     int choice = atoi(info_array[0]);
-    
+    // 
+    int is_logged_in;
+    int check;
+    //
     switch (choice)
     {
       case 1:
@@ -153,7 +156,7 @@ void *login_handler(void *arg)
       break;
 
       case 2:
-      int is_logged_in = 0;
+      is_logged_in = 0;
       for (int i = 0; i < client_index; i++)
       {
         if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd != connfd || strcmp(clients[i].username, info_array[2]) != 0 && clients[i].connfd == connfd)
@@ -192,7 +195,7 @@ void *login_handler(void *arg)
       break;
 
       case 99:
-      int check;
+      // int check;
       for (int i = 0; i < client_index; i++)
       {
         if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)

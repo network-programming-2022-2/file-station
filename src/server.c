@@ -139,7 +139,7 @@ void *login_handler(void *arg)
     switch (choice)
     {
       case 1:
-      ok = register_user(info_array[2], info_array[3]);
+      ok = register_user(info_array[2], info_array[3], info_array[4], info_array[5]);
       if (!ok)
       {
         strcpy(message, "[server]: Username already exists!\n");
@@ -175,7 +175,7 @@ void *login_handler(void *arg)
 
       if (!is_logged_in)
       {
-        ok = login_user(info_array[2], info_array[3]);
+        ok = check_credentials(info_array[2], info_array[3]);
         if (!ok)
         {
           strcpy(message, "[server]: Incorrect username or password!\n");

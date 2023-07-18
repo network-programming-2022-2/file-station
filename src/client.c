@@ -183,15 +183,17 @@ int main(int argc, char* argv[]) {
     int port;
     char ip[INET_ADDRSTRLEN];
     const char* delimiter = ":";
+    char server_port[SIZE];
 
-    if (argc != 4) {
-        printf("[ERROR]: The client needs to be bound to an IP address a port, and a folder to trace changes.\n");
+    if (argc != 5) {
+        printf("[ERROR]: The client needs to be bound to an IP address, a client port, a peer server port, and a folder to trace changes.\n");
         exit(EXIT_FAILURE);
     }
     else {
-        port = atoi(argv[2]);
         strcpy(ip, argv[1]);
-        strcpy(path_to_be_watched, argv[3]);
+        port = atoi(argv[2]);
+        strcpy(server_port, argv[3]);
+        strcpy(path_to_be_watched, argv[4]);
     }
 
     client_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -222,7 +224,7 @@ int main(int argc, char* argv[]) {
         //
         // const char *info_array1[] = { "1", "register", username, password };
         // const char* login_array1[] = { "2", "login", username, password };
-        const char *info_array[4] = { "1", "register", username, password };
+        const char *info_array[6] = { "1", "register", username, password, server_port, ip };
         const char *login_array[4] = { "2", "login", username, password };
         int size;
         //

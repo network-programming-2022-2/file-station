@@ -12,9 +12,6 @@ UserResult get_all_users();
 // Function to retrieve user rocords from the table by account status
 UserResult get_users_by_status(int status);
 
-// Function to retrieve user rocords from the table by account status and is_login
-UserResult get_users_by_status_and_is_login(int status, int is_login);
-
 // Function to retrieve a specific user record from the table by its ID
 User get_user_by_id(int user_id);
 

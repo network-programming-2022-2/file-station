@@ -5,19 +5,16 @@
 #include "../models/postgresql/postgresql.h"
 
 // Function to register a new user
-bool register_user(const char* username, const char* password);
+bool register_user(const char* username, const char* password, const char* server_port, const char* ip);
 
 // Function to check if a username is available
 bool is_username_available(const char* username);
 
 // Function to login a user
-bool login_user(const char* username, const char* password);
+// bool login_user(const char* username, const char* password);
 
-// Function to get logging status of a user
-bool is_logged_in(const char* username);
-
-// Function to logout a user
-bool logout_user(int user_id);
+// Function to check if the username and password are correct
+bool check_credentials(const char* username, const char* password);
 
 // Function to get user information by username
 // User get_user_by_username(const char* username);

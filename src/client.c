@@ -10,6 +10,8 @@
 #include <sys/inotify.h>
 #include <fcntl.h>
 #include <sys/select.h>
+#include <dirent.h>
+
 
 #define BUFF_SIZE 8192
 #define SIZE 1024
@@ -39,7 +41,7 @@ void submenu() {
     printf("2. Download\n");
     printf("3. Logout\n");
     printf("--------------------------------------------\n");
-    printf("Enter your choice (1 or 2, other to quit): ");
+    printf("Enter your choice (1 or 2 or 3, other to quit): ");
 }
 
 
@@ -95,7 +97,7 @@ void* inotify_thread(void* arg) {
 
                         int size = sizeof(info_array) / sizeof(info_array[0]);
                         char* message = construct_string(info_array, size, delimiter);
-
+                        
                         int bytes_sent = send(client_sock, message, strlen(message), 0);
                         if (bytes_sent < 0) {
                           printf("\nError! Can not send data to server! Client exit immediately!\n");
@@ -157,8 +159,18 @@ void* inotify_thread(void* arg) {
 
 int handle_download(char ip[INET_ADDRSTRLEN]);
 void *receive_thread(void *server_fd);
-void receiving(int server_fd);
+char* receiving(int server_fd);
 void sending(char ip[INET_ADDRSTRLEN], int sender_port);
+// int file_list(char path[SIZE]);
+int search_for_file(char path[SIZE], char file_name[SIZE]);
+void handle_req_string(char bufff[SIZE], int* des_port, char filename[SIZE]);
+void send_file(char ip[SIZE], int des_port, char filename[SIZE]);
+void receive_file(int src_sockfd, char filename[]);
+long get_file_size(FILE* file);
+void handle_receive_file_size(char buffer[SIZE], int* file_size);
+
+char path_to_be_watched[SIZE];
+char file_name_inserted[SIZE];
 
 int main(int argc, char* argv[]) {
     int client_sock, choice;
@@ -170,7 +182,6 @@ int main(int argc, char* argv[]) {
     int msg_len, bytes_sent, bytes_received, bytes_read, total_bytes_sent, total_bytes_received;
     int port;
     char ip[INET_ADDRSTRLEN];
-    char path_to_be_watched[SIZE];
     const char* delimiter = ":";
 
     if (argc != 4) {
@@ -261,28 +272,34 @@ int main(int argc, char* argv[]) {
                   pthread_create(&inotify_tid, NULL, inotify_thread, &inotify_args);
                   sleep(2); // Wait for 2 seconds
 
-                  while (1) {
-                    submenu();
+                int server_fd;
+                
+                while (1) {
                     int sub_choice;
-                    printf("after login: your choice ...\n");
+                    submenu();        
+
+                    printf("\nafter login: your choice ...\n");
                     scanf("%d", &sub_choice);
-                    while (getchar() != '\n'); // Clear input buffer
+                    getchar();
 
                     if (sub_choice == 1) {
                         printf("chua xong ...\n");
-                        break; // search
-
-                    }else if(sub_choice == 2){
+                        break;
+                    }
+                    else if (sub_choice == 2)
+                    {
                         printf("download ...\n");
-                        handle_download(ip);
-                        break; // download
-                    }else{
+                        server_fd = handle_download(ip);
+                        break;
+                    }
+                    else
+                    {
                         //logout
                         printf("loging out...\n");
                         break;
                     }
-                  }
-                  
+                    close(server_fd);
+                }
                 }
 
                 break;
@@ -362,7 +379,7 @@ int handle_download(char ip[]){
     pthread_create(&tid, NULL, &receive_thread, &server_fd); 
     printf("\n**********\n");
     sending(ip, port);
-    close(server_fd);
+    return server_fd;
 }
 
 //Calling receiving every 2 seconds
@@ -377,13 +394,19 @@ void *receive_thread(void *server_fd)
 }
 
 //Receiving messages on our port
-void receiving(int server_fd)
+char* receiving(int server_fd)
 {
     struct sockaddr_in address;
-    int valread;
-    char buffer[2000] = {0};
+    int bytes_read;
+    char buffer[SIZE] = {0};
     int addrlen = sizeof(address);
     fd_set current_sockets, ready_sockets;
+    char ip[SIZE];
+
+    int file_size;
+    int des_port;
+    char filename[SIZE];
+    // char file_req[SIZE];
 
     //Initialize my current set
     FD_ZERO(&current_sockets);
@@ -402,12 +425,13 @@ void receiving(int server_fd)
 
         for (int i = 0; i < FD_SETSIZE; i++)
         {
+            int client_socket;
+
             if (FD_ISSET(i, &ready_sockets))
             {
 
                 if (i == server_fd)
                 {
-                    int client_socket;
 
                     if ((client_socket = accept(server_fd, (struct sockaddr *)&address,
                                                 (socklen_t *)&addrlen)) < 0)
@@ -419,8 +443,36 @@ void receiving(int server_fd)
                 }
                 else
                 {
-                    valread = recv(i, buffer, sizeof(buffer), 0);
-                    printf("\n%s\n", buffer);
+                    bytes_read = recv(i, buffer, sizeof(buffer), 0);
+
+                    printf("%s", buffer);
+                    char *sub = strstr(buffer, "[PORT]:");
+                    char *sub_size = strstr(buffer, "[FILE SIZE]:");
+                    if (sub != NULL)
+                    {
+                        // receiving file name and port number
+                        handle_req_string(buffer, &des_port, filename);
+
+                        // printf("after parsing: %d %s\n", des_port, filename);
+                        int is_existed = search_for_file(path_to_be_watched, filename);
+                        if(is_existed == 1){
+                            printf("file existed");
+                        }else{
+                            printf("file not found");
+                        }
+
+                        send_file(ip, des_port, filename);
+                    }
+                    else if(sub_size != NULL){
+                        // receiving file size
+                        handle_receive_file_size(buffer, &file_size);
+                        printf("\nfile size: %d\n", file_size);
+
+                        receive_file(client_socket, filename);
+                    }else{
+                        printf("%s", buffer);
+                    }
+                    // printf("\n%s\n", buffer);
                     FD_CLR(i, &current_sockets);
                 }
             }
@@ -435,7 +487,7 @@ void receiving(int server_fd)
 void sending(char ip[], int sender_port)
 {
 
-    char buffer[2000] = {0};
+    char buffer[SIZE] = {0};
     //Fetching port number
     int PORT_server;
 
@@ -444,7 +496,7 @@ void sending(char ip[], int sender_port)
 
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
-    char hello[1024] = {0};
+    char filename[SIZE/2] = {0};
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("\n Socket creation error \n");
@@ -462,11 +514,181 @@ void sending(char ip[], int sender_port)
     }
 
     char dummy;
-    printf("Enter your message:");
-    scanf("%c", &dummy); //The buffer is our enemy
-    scanf("%[^\n]s", hello);
-    sprintf(buffer, "From: [PORT:%d] says: %s", sender_port, hello);
+    printf("Enter your file you want to download:");
+    scanf("%c", &dummy);
+    scanf("%[^\n]s", filename);
+    strcpy(file_name_inserted, filename);
+    sprintf(buffer, "[PORT]:%d:%s", sender_port, filename);
     send(sock, buffer, sizeof(buffer), 0);
     printf("\nMessage sent\n");
+
     close(sock);
+}
+
+int search_for_file(char path[], char file_name[]){
+    struct dirent *entry;
+    DIR *dir = opendir(path);
+
+    // printf("compare file: %s\n", file_name);
+    if (dir == NULL)
+    {
+        printf("Unable to open the directory.\n");
+        return -1;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        // if (entry->d_type == DT_REG) {  // Only process regular files, excluding directories
+        // printf("%s\n", entry->d_name);
+        // }
+        if(strcmp(entry->d_name, file_name) == 0){
+            printf("found sth\n");
+            return 1;
+        }
+    }
+
+    return -1;
+}
+
+void handle_req_string(char buffer[SIZE], int* des_port, char filename[SIZE]){
+    char *token;
+    int index = 0;
+    // buffer format PORT:%d:%s 
+    // %d port number is the destination to send file to
+    // %s file name that destination requested
+    token = strtok(buffer, ":");
+    while(token != NULL){
+        // printf("%s-%ld\n", token, strlen(token));
+        if(index == 1){
+            *des_port = atoi(token);
+        }else if(index == 2){
+            strcpy(filename, token);
+        }
+
+        index++;
+        
+        token = strtok(NULL, ":");
+    }
+}
+
+void handle_receive_file_size(char buffer[SIZE], int* file_size){
+    char *token;
+    int index = 0;
+    // buffer format [FILE SIZE]:%ld 
+    // %ld file size
+    token = strtok(buffer, ":");
+    while(token != NULL){
+        // printf("%s-%ld\n", token, strlen(token));
+        if(index == 1){
+            *file_size = atoi(token);
+        }
+        index++;
+        token = strtok(NULL, ":");
+    }
+}
+
+void send_file(char ip[], int des_port, char filename[SIZE]){
+    char path_to_file[SIZE * 2];
+    int bytes_read = 0;
+    char buffer[SIZE];
+    struct sockaddr_in des_addr;
+    int des_sock;
+    strcpy(ip, "127.0.0.1"); // for testing
+
+    if ((des_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("\n Socket creation error \n");
+        return;
+    }
+    des_addr.sin_family = AF_INET;
+    des_addr.sin_addr.s_addr = inet_addr(ip);
+    des_addr.sin_port = htons(des_port);
+    
+    if (connect(des_sock, (struct sockaddr *)&des_addr, sizeof(des_addr)) < 0)
+    {
+        printf("\nConnection Failed \n");
+        return;
+    }
+
+    strcpy(path_to_file, path_to_be_watched);
+    strcat(path_to_file, "/");
+    strcat(path_to_file, filename);
+
+    // printf("full_path:%s\n", path_to_file);
+    
+    FILE *src_file = fopen(path_to_file, "rb");
+    if(src_file == NULL){
+        printf("Error: could not open file.\n");
+		return ;
+    }
+
+    long file_size = get_file_size(src_file);
+
+    char file_size_msg[SIZE];
+    sprintf(file_size_msg, "[FILE SIZE]:%ld", file_size);
+    // Send file size to the other peer
+    if (send(des_sock, file_size_msg, sizeof(file_size_msg), 0) < 0) {
+        perror("Send failed");
+        exit(EXIT_FAILURE);
+    }
+
+    while ((bytes_read = fread(buffer, sizeof(char), sizeof(buffer), src_file)) > 0)
+    {
+        printf("content: %s\n", buffer);
+        int bytes_sent;
+        if ((bytes_sent = send(des_sock, buffer, bytes_read, 0)) < 0)
+        {
+            if (bytes_sent < 0)
+		    {
+			    printf("\nConnection closed");
+			    break;
+		    }
+        }
+    }
+    fclose(src_file);
+    printf("done read file\n");
+    return ;
+}
+
+void receive_file(int src_sockfd, char filename[]){
+    char storage_path[SIZE] = "../storage/";
+
+    file_name_inserted[strlen(file_name_inserted)] = '\0';
+
+    strcat(storage_path, file_name_inserted);
+    int bytes_write;
+    char buffer[SIZE];
+
+    printf("\npath to write file: %s\n", storage_path);
+    FILE *write_to_this_path = fopen(storage_path, "w");
+    if (write_to_this_path == NULL)
+	{
+		printf("Error: could not open file.\n");
+		return ;
+	}
+
+    while((bytes_write = recv(src_sockfd, buffer, sizeof(buffer), 0)) > 0){
+        if(fwrite(buffer, sizeof(char), bytes_write, write_to_this_path) < 0){
+			printf("Cannot write to file\n");
+            break;
+        }
+    }
+
+    char finished_download[SIZE];
+    strcpy(finished_download, "Download completed");
+
+    int bytes_sent = send(src_sockfd, finished_download, sizeof(finished_download), 0);
+    if(bytes_sent < 0){
+        perror("connection close");
+        exit(0);
+    }
+
+    fclose(write_to_this_path);
+    close(src_sockfd);
+}
+
+long get_file_size(FILE* file){
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    return size;
 }

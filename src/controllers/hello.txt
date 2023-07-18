@@ -1,0 +1,4 @@
+n this updated code, we use the stat() function fro
+m sys/stat.h to retrieve file information, and then
+ check the file type using S_ISREG(file_stat.s
+t_mode). This allows us to identify regular files within the directory.

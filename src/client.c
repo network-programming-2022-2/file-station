@@ -1,8 +1,8 @@
 #include <stdio.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #include <sys/select.h>
 #include <dirent.h>
-
+#include <sys/stat.h>
 
 #define BUFF_SIZE 8192
 #define SIZE 1024
@@ -46,6 +46,21 @@ void submenu() {
 
 
 char* construct_string(const char** info_array, int size, const char* delimiter);
+int handle_download(char ip[INET_ADDRSTRLEN]);
+void *receive_thread(void *server_fd);
+char* receiving(int server_fd);
+void sending(char ip[INET_ADDRSTRLEN], int sender_port);
+int file_list(char path[SIZE], char* list_of_files[]);
+int search_for_file(char path[SIZE], char file_name[SIZE]);
+void handle_req_string(char bufff[SIZE], int* des_port, char filename[SIZE]);
+void send_file(char ip[SIZE], int des_port, char filename[SIZE]);
+void receive_file(int src_sockfd, char filename[]);
+long get_file_size(FILE* file);
+void handle_receive_file_size(char buffer[SIZE], int* file_size);
+
+char path_to_be_watched[SIZE];
+char file_name_inserted[SIZE];
+
 
 void* inotify_thread(void* arg) {
     InotifyThreadArgs* args = (InotifyThreadArgs*)arg;
@@ -59,13 +74,16 @@ void* inotify_thread(void* arg) {
     char buffer[BUF_LEN];
     const char* delimiter = ":";
 
+    int is_moved = 0;
+    char original_file[BUF_LEN];
+
     fd = inotify_init();
     if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
         printf("Error setting non-blocking flag\n");
         exit(2);
     }
 
-    wd = inotify_add_watch(fd, path_to_be_watched, IN_MODIFY | IN_CREATE | IN_DELETE);
+    wd = inotify_add_watch(fd, path_to_be_watched, IN_MOVED_TO | IN_MOVED_FROM | IN_CREATE | IN_DELETE);
     if (wd == -1) {
         printf("Could not watch : %s\n", path_to_be_watched);
         pthread_exit(NULL);
@@ -93,7 +111,7 @@ void* inotify_thread(void* arg) {
                         printf("\nThe file %s was created.\n", event->name);
 
                         // Send the file name to the server
-                        const char* info_array[] = { "99", "upload", username, event->name };
+                        const char* info_array[] = { "3", "upload", username, event->name };
 
                         int size = sizeof(info_array) / sizeof(info_array[0]);
                         char* message = construct_string(info_array, size, delimiter);
@@ -119,7 +137,7 @@ void* inotify_thread(void* arg) {
                         printf("\nThe file %s was deleted.\n", event->name);
 
                         // Send the file name to the server
-                        const char* del_info_array[] = { "99", "delete", username, event->name };
+                        const char* del_info_array[] = { "3", "delete", username, event->name };
 
                         int size = sizeof(del_info_array) / sizeof(del_info_array[0]);
                         char* message = construct_string(del_info_array, size, delimiter);
@@ -138,12 +156,40 @@ void* inotify_thread(void* arg) {
 
                     }
                 }
-                else if (event->mask & IN_MODIFY) {
+                else if (event->mask & IN_MOVED_FROM) {
                     if (event->mask & IN_ISDIR) {
-                        printf("\nThe directory %s was modified.\n", event->name);
+                        printf("\nThe directory %s was moved.\n", event->name);
                     }
                     else {
-                        printf("\nThe file %s was modified.\n", event->name);
+                        printf("\nThe file %s was moved.\n", event->name);
+
+                        strcpy(original_file, event->name);
+                    }
+                }
+                else if (event->mask & IN_MOVED_TO) {
+                    if (event->mask & IN_ISDIR) {
+                        printf("\nThe directory was modified into %s.\n\n", event->name);
+                    }
+                    else {
+                        printf("\nThe file was modified into %s.\n\n", event->name);
+                        // Send the file name to the server
+                        const char* mod_info_array[] = { "3", "modify", username, event->name, original_file };
+
+                        int size = sizeof(mod_info_array) / sizeof(mod_info_array[0]);
+                        char* message = construct_string(mod_info_array, size, delimiter);
+
+                        int bytes_sent = send(client_sock, message, strlen(message), 0);
+                        if (bytes_sent < 0) {
+                          printf("\nError! Can not send data to server! Client exit immediately!\n");
+                        }
+                        printf("%s\n", message);
+
+                        int bytes_received = recv(client_sock, buffer, BUFF_SIZE, 0);
+                        if (bytes_received < 0) {
+                          printf("\nError! Can not receive data from server! Client exit immediately!\n"); 
+                        }
+                        printf("%s\n", buffer);
+
                     }
                 }
             }
@@ -156,21 +202,6 @@ void* inotify_thread(void* arg) {
 
     pthread_exit(NULL);
 }
-
-int handle_download(char ip[INET_ADDRSTRLEN]);
-void *receive_thread(void *server_fd);
-char* receiving(int server_fd);
-void sending(char ip[INET_ADDRSTRLEN], int sender_port);
-// int file_list(char path[SIZE]);
-int search_for_file(char path[SIZE], char file_name[SIZE]);
-void handle_req_string(char bufff[SIZE], int* des_port, char filename[SIZE]);
-void send_file(char ip[SIZE], int des_port, char filename[SIZE]);
-void receive_file(int src_sockfd, char filename[]);
-long get_file_size(FILE* file);
-void handle_receive_file_size(char buffer[SIZE], int* file_size);
-
-char path_to_be_watched[SIZE];
-char file_name_inserted[SIZE];
 
 int main(int argc, char* argv[]) {
     int client_sock, choice;
@@ -226,6 +257,7 @@ int main(int argc, char* argv[]) {
         // const char* login_array1[] = { "2", "login", username, password };
         const char *info_array[6] = { "1", "register", username, password, server_port, ip };
         const char *login_array[4] = { "2", "login", username, password };
+        const char *logout_array[3] = { "4", "logout", username };
         int size;
         //
         switch (choice) {
@@ -247,11 +279,12 @@ int main(int argc, char* argv[]) {
                 }
                 buff[bytes_received] = '\0';
                 printf("%s\n", buff);
+
                 break;
 
             case 2:
                 // login_array[4] = login_array1;
-                size = sizeof(info_array) / sizeof(login_array[0]);
+                size = sizeof(login_array) / sizeof(login_array[0]);
                 constructed_string = construct_string(login_array, size, delimiter);
 
                 bytes_sent = send(client_sock, constructed_string, strlen(constructed_string), 0);
@@ -270,6 +303,21 @@ int main(int argc, char* argv[]) {
 
                 if (strcmp(buff, "[server]: Login successfully!\n") == 0) 
                 {
+                  // upload existing files
+                  char* list_of_files[SIZE];
+
+                  // Allocate memory for each file name
+                  for (int i = 0; i < SIZE; i++) {
+                    list_of_files[i] = (char*)malloc(SIZE);
+                  }
+
+                  int file_count = file_list(path_to_be_watched, list_of_files);
+                  char* message = construct_string((const char**)list_of_files, file_count, delimiter);
+                  int bytes_sent = send(client_sock, message, strlen(message), 0);
+                  if (bytes_sent < 0) {
+                    printf("\nError! Can not send data to server! Client exit immediately!\n");
+                  }
+                  
                   strcpy(inotify_args.username, username);
                   pthread_create(&inotify_tid, NULL, inotify_thread, &inotify_args);
                   sleep(2); // Wait for 2 seconds
@@ -298,6 +346,23 @@ int main(int argc, char* argv[]) {
                     {
                         //logout
                         printf("loging out...\n");
+                        size = sizeof(logout_array) / sizeof(logout_array[0]);
+                        constructed_string = construct_string(logout_array, size, delimiter);
+
+                        bytes_sent = send(client_sock, constructed_string, strlen(constructed_string), 0);
+                        if (bytes_sent < 0) {
+                          printf("\nError! Cannot send data to server! Client exits immediately!\n");
+                          return 0;
+                        }
+
+                        bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
+                        if (bytes_received < 0) {
+                          printf("\nError! Cannot receive data from server! Client exits immediately!\n");
+                          return 0;
+                        }
+                        buff[bytes_received] = '\0';
+                        printf("%s\n", buff);
+
                         break;
                     }
                     close(server_fd);
@@ -310,6 +375,36 @@ int main(int argc, char* argv[]) {
 
     close(client_sock);
     return 0;
+}
+
+int file_list(char path[SIZE], char* list_of_files[])
+{
+  DIR* dir = opendir(path);
+  struct dirent* entry;
+  struct stat filestat;
+
+  int file_count = 0;
+  if (dir == NULL)
+  {
+    printf("Error opening directory: %s\n", path);
+    exit(0);
+  }
+
+  while ((entry = readdir(dir)) != NULL)
+  {
+    stat(entry->d_name,&filestat);
+    if( S_ISDIR(filestat.st_mode) )
+    {
+      printf("%4s: %s\n","Dir",entry->d_name);
+      continue;
+    }
+
+    printf("%4s: %s\n","File",entry->d_name);
+    list_of_files[file_count] = malloc(strlen(entry->d_name) + 1);
+    strcpy(list_of_files[file_count++], entry->d_name);
+  }
+  closedir(dir);
+  return file_count;
 }
 
 char* construct_string(const char** info_array, int size, const char* delimiter) {

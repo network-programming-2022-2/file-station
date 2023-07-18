@@ -20,6 +20,7 @@ typedef struct {
   int connfd;
   char username[50];
   char filename[BUFF_SIZE];
+  char old_filename[BUFF_SIZE];
   char method[BUFF_SIZE];
 } Client;
 void extract_username_passwd(char buffer[], char username[], char password[], char* delimiter);
@@ -104,6 +105,20 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+void delete_client(Client arr[], int size, int index) 
+{
+  if (index < 0 || index >= size) 
+  {
+    printf("Invalid index for deletion.\n");
+    return;
+  }
+
+  for (int i = index; i < size - 1; i++) 
+  {
+    arr[i] = arr[i + 1];
+  }
+}
+
 void *login_handler(void *arg)
 {
 	int connfd;
@@ -185,6 +200,27 @@ void *login_handler(void *arg)
           strcpy(message, "[server]: Login successfully!\n");
           clients[client_index].connfd = connfd;
           strcpy(clients[client_index++].username, info_array[2]);
+          bytes_sent = send(connfd, message, BUFF_SIZE, 0);
+          if (bytes_sent < 0)
+            perror("\n[server]: ");
+          printf("%s\n\n", message);
+
+          // upload existing files
+          bytes_received = recv(connfd, buff, BUFF_SIZE, 0);
+          if (bytes_received < 0)
+            perror("\n[server]: ");
+          int file_count;
+          char** files = extract_information(buff, &file_count);
+          for (int i = 0; i < file_count; i++)
+          {
+            bool ok = upload_file(files[i], info_array[2]);
+            if (!ok)
+            {
+              printf("[server]: File upload failed!\n");
+            }
+          }
+          printf("[server]: Files upload successfully!\n");
+          break;
         }
       }
       
@@ -194,8 +230,9 @@ void *login_handler(void *arg)
       printf("%s\n\n", message);
       break;
 
-      case 99:
+      case 3:
       // int check;
+
       for (int i = 0; i < client_index; i++)
       {
         if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
@@ -205,6 +242,8 @@ void *login_handler(void *arg)
           // Create a file update struct to pass to the file_update_handler thread
           strcpy(clients[i].filename, info_array[3]);
           strcpy(clients[i].method, info_array[1]);
+          if (count == 5)
+            strcpy(clients[i].old_filename, info_array[4]);
 
           // Create a new thread to handle the file update
           pthread_t file_update_tid;
@@ -220,6 +259,31 @@ void *login_handler(void *arg)
           perror("\n[server]: ");
         printf("%s\n\n", message);
       }
+      break;
+
+      case 4:
+      
+      for (int i = 0; i < client_index; i++)
+      {
+        if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
+        {
+          check = 1;
+
+          delete_client(clients, client_index, i);
+          client_index--;
+          strcpy(message, "[server]: Logout successfully!\n");
+          break;
+        } 
+      }
+      if (check == 0)
+      {
+        strcpy(message, "[server]: Have to login first!\n");
+      }
+
+      bytes_sent = send(connfd, message, BUFF_SIZE, 0);
+        if (bytes_sent < 0)
+          perror("\n[server]: ");
+        printf("%s\n\n", message);
       break;
     }
   }
@@ -260,6 +324,14 @@ void* file_upload_handler(void* arg) {
       strcpy(message, "[server]: File deletion failed!\n");
     else
       strcpy(message, "[server]: File deletion successfully!\n");
+  }
+  else if (strcmp(method, "modify") == 0)
+  {
+    bool ok = update_file_name(client->old_filename, filename, username);
+    if (!ok)
+      strcpy(message, "[server]: File name modification failed!\n");
+    else
+      strcpy(message, "[server]: File name modification successfully!\n");
   }
 
   bytes_sent = send(connfd, message, BUFF_SIZE, 0);

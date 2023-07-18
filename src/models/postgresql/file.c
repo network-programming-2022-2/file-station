@@ -245,6 +245,8 @@ void update_file_by_id(int file_id, File new_file) {
     
     // Execute the prepared statement with the parameter values
     PGresult* result = PQexecParams(pgconn, update_query, 4, NULL, values, NULL, NULL, 0);
+    if (PQresultStatus(result) != PGRES_COMMAND_OK)
+      printf("Error: %s\n", PQresultErrorMessage(result));
     PQclear(result);
 }
 

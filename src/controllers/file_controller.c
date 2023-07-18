@@ -30,3 +30,18 @@ bool delete_file(const char* filename, const char* username)
 
   return true;
 }
+
+bool update_file_name(const char* old_filename, const char* filename, const char* username)
+{
+  User user = get_user_by_username(username);
+  if (user.user_id == 0)
+    return false;
+
+  File file = get_file_by_filename_and_user_id(old_filename, user.user_id);
+  if (file.file_id == 0)
+    return false;
+
+  strcpy(file.filename, filename);
+  update_file_by_id(file.file_id, file);
+  return true;
+}

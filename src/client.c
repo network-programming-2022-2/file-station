@@ -168,6 +168,7 @@ void send_file(char ip[SIZE], int des_port, char filename[SIZE]);
 void receive_file(int src_sockfd, char filename[]);
 long get_file_size(FILE* file);
 void handle_receive_file_size(char buffer[SIZE], int* file_size);
+int file_list(char path[SIZE], char * list_of_file[]);
 
 char path_to_be_watched[SIZE];
 char file_name_inserted[SIZE];
@@ -284,6 +285,13 @@ int main(int argc, char* argv[]) {
 
                     if (sub_choice == 1) {
                         printf("chua xong ...\n");
+                        int f_num;
+                        char *list_of_file[100];
+                        f_num = file_list(path_to_be_watched, list_of_file);
+                        for (int i = 0; i < f_num ; i ++)
+                        {
+                          printf("\n%d: %s", i, list_of_file[i]);
+                        }
                         break;
                     }
                     else if (sub_choice == 2)
@@ -547,6 +555,24 @@ int search_for_file(char path[], char file_name[]){
     }
 
     return -1;
+}
+
+int file_list(char path[SIZE], char * list_of_file[]){
+    struct dirent *entry;
+    DIR *dir = opendir(path);
+
+    int f_index = 0;
+    if (dir == NULL)
+    {
+        printf("Unable to open the directory.\n");
+        exit(0);
+    }
+    while((entry = readdir(dir)) != NULL){
+        list_of_file[f_index] = malloc(strlen(entry->d_name) + 1);
+        strcpy(list_of_file[f_index++], entry->d_name);
+    }
+
+    return f_index;
 }
 
 void handle_req_string(char buffer[SIZE], int* des_port, char filename[SIZE]){

@@ -1,7 +1,7 @@
 #include "user_controller.h"
 
 // Function to register a new user
-bool register_user(const char* username, const char* password)
+bool register_user(const char* username, const char* password, const char* server_port, const char* ip)
 {
   bool is_available = is_username_available(username);
   if (!is_available)
@@ -14,7 +14,9 @@ bool register_user(const char* username, const char* password)
   strcpy(user.password, password);
   user.wrong_attempts = 0;
   user.status = 0;
-  user.is_login = 0;
+  int i_server_port = atoi(server_port);
+  user.server_port = i_server_port;
+  strcpy(user.ip, ip);
   insert_user(user);
   return true;
 }
@@ -31,23 +33,7 @@ bool is_username_available(const char* username)
   return true;
 }
 
-// Function to check user login status
-bool is_logged_in(const char* username)
-{
-  User user;
-  user = get_user_by_username(username);
-  if (user.user_id == 0)
-  {
-    return false;
-  }
-  if (user.is_login == 1)
-    return true;
-
-  return false;
-}
-
-// Function to login a user
-bool login_user(const char* username, const char* password)
+bool check_credentials(const char* username, const char* password)
 {
   User user;
   user = get_user_by_username(username);
@@ -57,25 +43,9 @@ bool login_user(const char* username, const char* password)
   }
   if (strcmp(user.password, password) == 0)
   {
-    user.is_login = 1;
-    update_user_by_id(user.user_id, user);
     return true;
   }
   return false;
-}
-
-// Function to logout a user
-bool logout_user(int user_id)
-{
-  User user;
-  user = get_user_by_id(user_id);
-  if (user.user_id == 0)
-  {
-    return false;
-  }
-  user.is_login = 0;
-  update_user_by_id(user.user_id, user);
-  return true;
 }
 
 // Function to change a user's password

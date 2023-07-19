@@ -39,7 +39,8 @@ typedef struct {
     char* password;
     int wrong_attempts;
     int status;
-    int is_login;
+    int server_port;
+    char* ip;
 } User;
 
 typedef struct {

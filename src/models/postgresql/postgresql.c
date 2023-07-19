@@ -22,7 +22,7 @@ PGconn* connect_to_postgresql(const DatabaseConnection* connection)
 void initialize_postgresql()
 {
     const char* createUsersTableQuery = 
-      "CREATE TABLE IF NOT EXISTS users (user_id SERIAL PRIMARY KEY, username VARCHAR(255), password VARCHAR(255), wrong_attempts INT, status INT, is_login INT)";
+      "CREATE TABLE IF NOT EXISTS users (user_id SERIAL PRIMARY KEY, username VARCHAR(255), password VARCHAR(255), wrong_attempts INT, status INT, server_port INT, ip VARCHAR(50))";
     PGresult* result = PQexec(pgconn, createUsersTableQuery);
     PQclear(result);
     

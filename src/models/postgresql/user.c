@@ -2,10 +2,10 @@
 
 void insert_user(User user) {
     // Prepare the SQL statement with appropriate placeholders for the values
-    const char* insert_query = "INSERT INTO users (username, password, wrong_attempts, status, is_login) VALUES ($1, $2, $3, $4, $5)";
+    const char* insert_query = "INSERT INTO users (username, password, wrong_attempts, status, server_port, ip) VALUES ($1, $2, $3, $4, $5, $6)";
     
     // Create the parameter values array
-    const char* values[5];
+    const char* values[6];
     values[0] = user.username;
     values[1] = user.password;
     char wrong_attempts_str[10];
@@ -14,12 +14,20 @@ void insert_user(User user) {
     char status_str[10];
     snprintf(status_str, sizeof(status_str), "%d", user.status);
     values[3] = status_str;
-    char is_login_str[10];
-    snprintf(is_login_str, sizeof(is_login_str), "%d", user.is_login);
-    values[4] = is_login_str;
+    char server_port_str[10];
+    snprintf(server_port_str, sizeof(server_port_str), "%d", user.server_port);
+    values[4] = server_port_str;
+    values[5] = user.ip;
     
     // Execute the prepared statement with the parameter values
-    PGresult* result = PQexecParams(pgconn, insert_query, 5, NULL, values, NULL, NULL, 0);
+    PGresult* result = PQexecParams(pgconn, insert_query, 6, NULL, values, NULL, NULL, 0);
+    if (PQresultStatus(result) != PGRES_COMMAND_OK)
+    {
+      printf("Error: %s\n", PQerrorMessage(pgconn));
+      PQclear(result);
+      return;
+    }
+
     PQclear(result);
 }
 
@@ -50,7 +58,8 @@ UserResult get_all_users() {
         user.password = PQgetvalue(result, i, 2);
         user.wrong_attempts = atoi(PQgetvalue(result, i, 3));
         user.status = atoi(PQgetvalue(result, i, 4));
-        user.is_login = atoi(PQgetvalue(result, i, 5));
+        user.server_port = atoi(PQgetvalue(result, i, 5));
+        user.ip = PQgetvalue(result, i, 6);
 
         // Assign the user struct to the array
         users[i] = user;
@@ -96,56 +105,8 @@ UserResult get_users_by_status(int status) {
         user.password = PQgetvalue(result, i, 2);
         user.wrong_attempts = atoi(PQgetvalue(result, i, 3));
         user.status = atoi(PQgetvalue(result, i, 4));
-        user.is_login = atoi(PQgetvalue(result, i, 5));
-
-        // Assign the user struct to the array
-        users[i] = user;
-    }
-
-    // Clear the result set
-    PQclear(result);
-
-    UserResult user_result;
-    user_result.users = users;
-    user_result.num_users = num_rows;
-    return user_result;
-}
-
-UserResult get_users_by_status_and_is_login(int status, int is_login) {
-    // Prepare the SQL statement with appropriate placeholders for the values
-    const char* select_query = "SELECT * FROM users WHERE status = $1 AND is_login = $2";
-    const char* values[2];
-    char status_str[10];
-    snprintf(status_str, sizeof(status_str), "%d", status);
-    values[0] = status_str;
-    char is_login_str[10];
-    snprintf(is_login_str, sizeof(is_login_str), "%d", is_login);
-    values[1] = is_login_str;
-    PGresult* result = PQexecParams(pgconn, select_query, 2, NULL, values, NULL, NULL, 0);
-    
-    // Get the number of rows in the result set
-    int num_rows = PQntuples(result);
-    if (num_rows == 0) {
-        UserResult user_result;
-        user_result.users = NULL;
-        user_result.num_users = 0;
-        return user_result;
-    }
-
-    // Create an array of User structs
-    User* users = malloc(num_rows * sizeof(User));
-
-    // Iterate over the result set and populate the array
-    for (int i = 0; i < num_rows; i++) {
-        User user;
-        
-        // Retrieve the values from the result set
-        user.user_id = atoi(PQgetvalue(result, i, 0));
-        user.username = PQgetvalue(result, i, 1);
-        user.password = PQgetvalue(result, i, 2);
-        user.wrong_attempts = atoi(PQgetvalue(result, i, 3));
-        user.status = atoi(PQgetvalue(result, i, 4));
-        user.is_login = atoi(PQgetvalue(result, i, 5));
+        user.server_port = atoi(PQgetvalue(result, i, 5));
+        user.ip = PQgetvalue(result, i, 6);
 
         // Assign the user struct to the array
         users[i] = user;
@@ -188,7 +149,8 @@ User get_user_by_id(int user_id) {
     user.password = PQgetvalue(result, 0, 2);
     user.wrong_attempts = atoi(PQgetvalue(result, 0, 3));
     user.status = atoi(PQgetvalue(result, 0, 4));
-    user.is_login = atoi(PQgetvalue(result, 0, 5));
+    user.server_port = atoi(PQgetvalue(result, 0, 5));
+    user.ip = PQgetvalue(result, 0, 6);
 
     // Clear the result set
     PQclear(result);
@@ -223,7 +185,8 @@ User get_user_by_username(const char* username) {
     user.password = PQgetvalue(result, 0, 2);
     user.wrong_attempts = atoi(PQgetvalue(result, 0, 3));
     user.status = atoi(PQgetvalue(result, 0, 4));
-    user.is_login = atoi(PQgetvalue(result, 0, 5));
+    user.server_port = atoi(PQgetvalue(result, 0, 5));
+    user.ip = PQgetvalue(result, 0, 6);
 
     // Clear the result set
     PQclear(result);
@@ -234,10 +197,10 @@ User get_user_by_username(const char* username) {
 
 void update_user_by_id(int user_id, User new_user) {
     // Prepare the SQL statement with appropriate placeholders for the ID value and new values
-    const char* update_query = "UPDATE users SET username = $1, password = $2, wrong_attempts = $3, status = $4, is_login = $5 WHERE user_id = $6";
+    const char* update_query = "UPDATE users SET username = $1, password = $2, wrong_attempts = $3, status = $4, server_port = $5, ip = $6 WHERE user_id = $7";
     
     // Create the parameter values array
-    const char* values[6];
+    const char* values[7];
     values[0] = new_user.username;
     values[1] = new_user.password;
     char wrong_attempts_str[10];
@@ -246,15 +209,16 @@ void update_user_by_id(int user_id, User new_user) {
     char status_str[10];
     snprintf(status_str, sizeof(status_str), "%d", new_user.status);
     values[3] = status_str;
-    char is_login_str[10];
-    snprintf(is_login_str, sizeof(is_login_str), "%d", new_user.is_login);
-    values[4] = is_login_str;
+    char server_port_str[10];
+    snprintf(server_port_str, sizeof(server_port_str), "%d", new_user.server_port);
+    values[4] = server_port_str;
+    values[5] = new_user.ip;
     char user_id_str[10];
     snprintf(user_id_str, sizeof(user_id_str), "%d", user_id);
-    values[5] = user_id_str;
+    values[6] = user_id_str;
     
     // Execute the prepared statement with the parameter values
-    PGresult* result = PQexecParams(pgconn, update_query, 6, NULL, values, NULL, NULL, 0);
+    PGresult* result = PQexecParams(pgconn, update_query, 7, NULL, values, NULL, NULL, 0);
     PQclear(result);
 }
 

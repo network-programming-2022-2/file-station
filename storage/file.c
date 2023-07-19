@@ -257,18 +257,4 @@ void delete_file_by_id(int file_id) {
     // Create the parameter values array
     const char* values[1];
     char file_id_str[10];
-    snprintf(file_id_str, sizeof(file_id_str), "%d", file_id);
-    values[0] = file_id_str;
-    
-    // Execute the prepared statement with the parameter values
-    PGresult* result = PQexecParams(pgconn, delete_query, 1, NULL, values, NULL, NULL, 0);
-    PQclear(result);
-}
-
-void delete_all_files() {
-    // Execute a DELETE query to remove all records from the table
-    const char* delete_query = "DELETE FROM files";
-    PGresult* result = PQexec(pgconn, delete_query);
-    PQclear(result);
-}
-
+    snprintf(file_id_str, sizeof(fil

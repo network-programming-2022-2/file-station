@@ -49,6 +49,8 @@ GtkWidget *searchEntry;
 GtkWidget *searchButton;
 GtkWidget *treeView;
 GtkBuilder *searchBuilder; 
+GtkListStore *list_store;
+
 void on_registerButton_clicked(GtkButton *b){
         gtk_widget_hide(window);
         gtk_widget_show(registerWindow);
@@ -122,7 +124,9 @@ void on_logoutMenuButton_clicked(GtkButton *b){
 }
 //Search
 void on_searchButton_clicked(GtkWidget *button) {
-    GtkListStore *list_store = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+
+    gtk_list_store_clear(list_store);
+
     GtkTreeIter iter;
     gtk_list_store_append(list_store, &iter);
     gtk_list_store_set(list_store, &iter, 0, "John", 1, "1.1.1.1", 2, "1234", -1);
@@ -130,21 +134,7 @@ void on_searchButton_clicked(GtkWidget *button) {
     gtk_list_store_set(list_store, &iter, 0, "Jane", 1, "1.2.3.4", 2, "2345", -1);
     gtk_list_store_append(list_store, &iter);
     gtk_list_store_set(list_store, &iter, 0, "Bob", 1, "2.2.2.2", 2, "8888", -1);
-
-    // Set the model for the new tree view
-    gtk_tree_view_set_model(treeView, GTK_TREE_MODEL(list_store));
-
-    // Create the TreeViewColumns
-    GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-    GtkTreeViewColumn *column_user = gtk_tree_view_column_new_with_attributes("User", renderer, "text", 0, NULL);
-    GtkTreeViewColumn *column_ip = gtk_tree_view_column_new_with_attributes("IP", renderer, "text", 1, NULL);
-    GtkTreeViewColumn *column_port = gtk_tree_view_column_new_with_attributes("Port", renderer, "text", 2, NULL);
-
-
-    // Add the columns to the new tree view
-    gtk_tree_view_append_column(treeView, column_user);
-    gtk_tree_view_append_column(treeView, column_ip);
-    gtk_tree_view_append_column(treeView, column_port);
+    gtk_widget_queue_draw(GTK_WIDGET(list_store));
 }
 
 GtkWidget* createHomePageView(InotifyThreadArgs inotify_args){
@@ -211,7 +201,6 @@ GtkWidget* createHomePageView(InotifyThreadArgs inotify_args){
         downloadMenuButton = GTK_WIDGET(gtk_builder_get_object(menuBuilder, "downloadButton"));
 
         g_signal_connect(searchMenuButton, "clicked", G_CALLBACK(on_searchMenuButton_clicked), NULL);
-        // g_signal_connect(downloadMenuButton, "clicked", G_CALLBACK(on_downloadMenuButton_clicked), NULL);
         g_signal_connect(logoutMenuButton, "clicked", G_CALLBACK(on_logoutMenuButton_clicked), NULL);
 
 //Build search
@@ -226,6 +215,21 @@ GtkWidget* createHomePageView(InotifyThreadArgs inotify_args){
         treeView = GTK_WIDGET(gtk_builder_get_object(searchBuilder, "treeView"));
 
         g_signal_connect(searchButton, "clicked", G_CALLBACK(on_searchButton_clicked), NULL);
+
+        list_store = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+        gtk_tree_view_set_model(treeView, GTK_TREE_MODEL(list_store));
+
+        // Create the TreeViewColumns
+        GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+        GtkTreeViewColumn *column_user = gtk_tree_view_column_new_with_attributes("User", renderer, "text", 0, NULL);
+        GtkTreeViewColumn *column_ip = gtk_tree_view_column_new_with_attributes("IP", renderer, "text", 1, NULL);
+        GtkTreeViewColumn *column_port = gtk_tree_view_column_new_with_attributes("Port", renderer, "text", 2, NULL);
+
+
+        // Add the columns to the new tree view
+        gtk_tree_view_append_column(treeView, column_user);
+        gtk_tree_view_append_column(treeView, column_ip);
+        gtk_tree_view_append_column(treeView, column_port);
 
         return window;
 }

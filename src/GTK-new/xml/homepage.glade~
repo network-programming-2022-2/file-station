@@ -3,11 +3,18 @@
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkWindow" id="window">
+    <property name="width-request">1000</property>
+    <property name="height-request">500</property>
     <property name="can-focus">False</property>
+    <property name="gravity">center</property>
     <child>
       <object class="GtkFixed" id="fixed">
+        <property name="width-request">1000</property>
+        <property name="height-request">500</property>
         <property name="visible">True</property>
         <property name="can-focus">False</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
         <child>
           <object class="GtkButton" id="registerButton">
             <property name="label" translatable="yes">REGISTER</property>
@@ -18,8 +25,8 @@
             <property name="receives-default">True</property>
           </object>
           <packing>
-            <property name="x">147</property>
-            <property name="y">91</property>
+            <property name="x">540</property>
+            <property name="y">138</property>
           </packing>
         </child>
         <child>
@@ -32,8 +39,8 @@
             <property name="receives-default">True</property>
           </object>
           <packing>
-            <property name="x">149</property>
-            <property name="y">140</property>
+            <property name="x">542</property>
+            <property name="y">197</property>
           </packing>
         </child>
         <child>
@@ -43,10 +50,12 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">P2P PROGRAM</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
           </object>
           <packing>
-            <property name="x">101</property>
-            <property name="y">24</property>
+            <property name="x">500</property>
+            <property name="y">40</property>
           </packing>
         </child>
       </object>

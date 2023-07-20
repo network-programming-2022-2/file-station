@@ -209,6 +209,9 @@ void *login_handler(void *arg)
           bytes_received = recv(connfd, buff, BUFF_SIZE, 0);
           if (bytes_received < 0)
             perror("\n[server]: ");
+
+          buff[bytes_received] = '\0';
+
           int file_count;
           char** files = extract_information(buff, &file_count);
           for (int i = 0; i < file_count; i++)

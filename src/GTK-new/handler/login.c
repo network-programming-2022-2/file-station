@@ -204,6 +204,7 @@ bool handle_login(const char* delimiter, const char* password, InotifyThreadArgs
 
     int file_count = file_list(inotify_args.path_to_watch, list_of_files);
     char* message = construct_string((const char**)list_of_files, file_count, delimiter);
+    printf("%s\n", message);
     int bytes_sent = send(inotify_args.client_sock, message, strlen(message), 0);
     if (bytes_sent < 0) {
       printf("\nError! Can not send data to server! Client exit immediately!\n");

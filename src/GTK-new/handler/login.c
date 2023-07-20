@@ -156,17 +156,27 @@ int file_list(char path[SIZE], char* list_of_files[])
 
   while ((entry = readdir(dir)) != NULL)
   {
-    stat(entry->d_name,&filestat);
-    if( S_ISDIR(filestat.st_mode) )
+    char full_path[SIZE];
+    snprintf(full_path, SIZE, "%s/%s", path, entry->d_name);
+
+    if (stat(full_path, &filestat) == -1)
     {
-      printf("%4s: %s\n","Dir",entry->d_name);
+      printf("Error getting file/directory information: %s\n", full_path);
       continue;
     }
 
-    printf("%4s: %s\n","File",entry->d_name);
+    if (S_ISDIR(filestat.st_mode))
+    {
+      printf("%4s: %s\n", "Dir", full_path);
+      continue;
+    }
+
+    printf("%4s: %s\n", "File", full_path);
+
     list_of_files[file_count] = malloc(strlen(entry->d_name) + 1);
     strcpy(list_of_files[file_count++], entry->d_name);
   }
+
   closedir(dir);
   return file_count;
 }

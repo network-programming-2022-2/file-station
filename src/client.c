@@ -47,9 +47,7 @@ void submenu() {
 
 
 char* construct_string(const char** info_array, int size, const char* delimiter);
-
 void *inotify_thread(void *arg);
-
 int handle_download(char ip[INET_ADDRSTRLEN]);
 void *receive_thread(void *server_fd);
 char* receiving(int server_fd);
@@ -62,14 +60,40 @@ void receive_file(int src_sockfd, char filename[]);
 long get_file_size(FILE* file);
 void handle_receive_file_size(char buffer[SIZE], int* file_size);
 int file_list(char path[SIZE], char * list_of_file[]);
-
 char* get_input();
 bool handle_registration(int client_sock, const char* delimiter, char username[], char password[], char server_port[], char ip[]);
 bool handle_login(int client_sock, const char* delimiter, char* username, char* password, pthread_t inotify_tid, InotifyThreadArgs inotify_args);
+bool handle_logout(int client_sock, const char* delimiter, char username[]);
 
 char path_to_be_watched[SIZE];
 char file_name_inserted[SIZE];
 char server_port[SIZE];
+
+bool handle_logout(int client_sock, const char* delimiter, char username[])
+{
+  char buff[BUFF_SIZE];
+  const char *logout_array[3] = { "4", "logout", username };
+  int size = sizeof(logout_array) / sizeof(logout_array[0]);
+  char* constructed_string = construct_string(logout_array, size, delimiter);
+
+  int bytes_sent = send(client_sock, constructed_string, strlen(constructed_string), 0);
+  if (bytes_sent < 0) {
+    printf("\nError! Cannot send data to server! Client exits immediately!\n");
+    return false;
+  }
+
+  int bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
+  if (bytes_received < 0) {
+    printf("\nError! Cannot receive data from server! Client exits immediately!\n");
+    return false;
+  }
+  buff[bytes_received] = '\0';
+
+  if (strcmp(buff, "[server]: Logout successfully!\n") == 0) {
+    return true;
+  }
+  return false;
+}
 
 bool handle_login(int client_sock, const char* delimiter, char* username, char* password, pthread_t inotify_tid, InotifyThreadArgs inotify_args) 
 {
@@ -241,24 +265,15 @@ int main(int argc, char* argv[]) {
                     else
                     {
                         //logout
-                        printf("loging out...\n");
-                        size = sizeof(logout_array) / sizeof(logout_array[0]);
-                        char* constructed_string = construct_string(logout_array, size, delimiter);
-
-                        bytes_sent = send(client_sock, constructed_string, strlen(constructed_string), 0);
-                        if (bytes_sent < 0) {
-                          printf("\nError! Cannot send data to server! Client exits immediately!\n");
-                          return 0;
+                        success = handle_logout(client_sock, delimiter, username);
+                        if (success == true)
+                        {
+                          printf("loging out...\n");
                         }
-
-                        bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
-                        if (bytes_received < 0) {
-                          printf("\nError! Cannot receive data from server! Client exits immediately!\n");
-                          return 0;
+                        else
+                        {
+                          printf("logout failed...\n");
                         }
-                        buff[bytes_received] = '\0';
-                        printf("%s\n", buff);
-
                         break;
                     }
                     close(server_fd);

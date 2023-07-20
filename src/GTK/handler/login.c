@@ -1,5 +1,5 @@
 #include<gtk/gtk.h>
-
+#include"menu.c"
 GtkWidget *window;
 GtkWidget *fixed;
 GtkWidget *loginLabel;
@@ -10,9 +10,14 @@ GtkWidget *passwordEntry;
 GtkWidget *submitButton;
 GtkWidget *backButton;
 GtkBuilder *builder; 
-void on_submitButton_clicked(GtkButton *b);
+void on_submitButton2_clicked(GtkButton *b){
+        GtkWidget *menuFixed = createMenuView(0,NULL);
+        gtk_container_remove(GTK_CONTAINER(window), GTK_WIDGET(fixed));
+        gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(menuFixed));
+        gtk_widget_show_all(window);
 
-GtkWidget* createloginView(int argc, char *argv[]){
+}
+GtkWidget* createLoginView(int argc, char *argv[]){
 
         builder = gtk_builder_new_from_file("xml/login.glade");
         window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
@@ -26,14 +31,9 @@ GtkWidget* createloginView(int argc, char *argv[]){
         passwordEntry = GTK_WIDGET(gtk_builder_get_object(builder, "passwordEntry"));
         submitButton = GTK_WIDGET(gtk_builder_get_object(builder, "submitButton"));
         backButton = GTK_WIDGET(gtk_builder_get_object(builder, "backButton"));
-        g_signal_connect(submitButton, "clicked", G_CALLBACK(on_submitButton_clicked), NULL);
+        g_signal_connect(submitButton, "clicked", G_CALLBACK(on_submitButton2_clicked), NULL);
 
-        return window;
+        return fixed;
 }
 
-void on_submitButton_clicked(GtkButton *b){
-        gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameEntry));
-        gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordEntry));
-        printf("%s, %s", username, password);
 
-}

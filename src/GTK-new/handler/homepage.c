@@ -41,6 +41,13 @@ GtkWidget *logoutMenuButton;
 GtkWidget *searchMenuButton;
 GtkWidget *downloadMenuButton;
 GtkBuilder *menuBuilder; 
+//Search
+GtkWidget *searchWindow;
+GtkWidget *searchFixed;
+GtkWidget *searchEntry;
+GtkWidget *searchButton;
+GtkWidget *treeView;
+GtkBuilder *searchBuilder; 
 void on_registerButton_clicked(GtkButton *b){
         gtk_widget_hide(window);
         gtk_widget_show(registerWindow);

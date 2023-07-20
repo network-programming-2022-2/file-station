@@ -2,6 +2,7 @@
 #include "../main.h"
 #include "register.c"
 #include "login.c"
+#include "logout.c"
 
 InotifyThreadArgs home_inotify_args;
 
@@ -107,8 +108,17 @@ void on_searchMenuButton_clicked(GtkButton *b){
         gtk_widget_show(searchWindow);
 }
 void on_logoutMenuButton_clicked(GtkButton *b){
-        gtk_widget_hide(menuWindow);
-        gtk_widget_show(window);
+        bool ok = handle_logout(home_inotify_args.client_sock, ":", home_inotify_args.username);
+        printf("Logout: %d\n", ok);
+        fflush(stdout);
+        if (ok){
+          printf("Logout successful!\n");
+          gtk_widget_hide(menuWindow);
+          gtk_widget_show(window);
+        }
+        else{
+          printf("Logout failed!\n"); 
+        }
 }
 //Search
 void on_searchButton_clicked(GtkWidget *button) {
@@ -201,6 +211,8 @@ GtkWidget* createHomePageView(InotifyThreadArgs inotify_args){
         downloadMenuButton = GTK_WIDGET(gtk_builder_get_object(menuBuilder, "downloadButton"));
 
         g_signal_connect(searchMenuButton, "clicked", G_CALLBACK(on_searchMenuButton_clicked), NULL);
+        // g_signal_connect(downloadMenuButton, "clicked", G_CALLBACK(on_downloadMenuButton_clicked), NULL);
+        g_signal_connect(logoutMenuButton, "clicked", G_CALLBACK(on_logoutMenuButton_clicked), NULL);
 
 //Build search
         searchBuilder = gtk_builder_new_from_file("xml/search.glade");

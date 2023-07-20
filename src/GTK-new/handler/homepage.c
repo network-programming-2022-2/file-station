@@ -1,4 +1,9 @@
 #include<gtk/gtk.h>
+#include "../main.h"
+#include "register.c"
+#include "login.c"
+
+InotifyThreadArgs home_inotify_args;
 
 GtkWidget *window;
 GtkWidget *fixed;
@@ -36,10 +41,9 @@ GtkWidget *logoutMenuButton;
 GtkWidget *searchMenuButton;
 GtkWidget *downloadMenuButton;
 GtkBuilder *menuBuilder; 
-void on_registerButton_clicked(GtkButton *b,int argc, char *argv[]){
+void on_registerButton_clicked(GtkButton *b){
         gtk_widget_hide(window);
         gtk_widget_show(registerWindow);
-       
 }
 void on_loginButton_clicked(GtkButton *b,int argc, char *argv[]){
         gtk_widget_hide(window);
@@ -51,8 +55,18 @@ void on_loginButton_clicked(GtkButton *b,int argc, char *argv[]){
 void on_submitRegisterButton_clicked(GtkButton *b){
         gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameRegisterEntry));
         gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordRegisterEntry));
-        printf("%s, %s", username, password);
 
+        strcpy(home_inotify_args.username, username);
+        bool ok = handle_registration(":", password, home_inotify_args);
+        fflush(stdout);
+
+        if (ok){
+          gtk_widget_hide(registerWindow);
+          gtk_widget_show(window);
+        }
+        else{
+          printf("Registration failed!\n"); 
+        }
 }
 void on_backRegisterButton_clicked(GtkButton *b,int argc, char *argv[]){
 
@@ -64,11 +78,16 @@ void on_backRegisterButton_clicked(GtkButton *b,int argc, char *argv[]){
 void on_submitLoginButton_clicked(GtkButton *b){
         gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameLoginEntry));
         gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordLoginEntry));
-        printf("%s, %s", username, password);
+        strcpy(home_inotify_args.username, username);
+        bool ok = handle_login(":", password, home_inotify_args);
         fflush(stdout);
-        gtk_widget_hide(loginWindow);
-        gtk_widget_show(menuWindow);
-
+        if (ok){
+          gtk_widget_hide(loginWindow);
+          gtk_widget_show(menuWindow);
+        }
+        else{
+          printf("Login failed!\n"); 
+        }
 }
 void on_backLoginButton_clicked(GtkButton *b,int argc, char *argv[]){
         gtk_widget_hide(loginWindow);
@@ -81,7 +100,14 @@ void on_searchMenuButton_clicked(GtkButton *b){
 }
 
 
-GtkWidget* createHomePageView(int argc, char *argv[]){
+GtkWidget* createHomePageView(InotifyThreadArgs inotify_args){
+
+        strcpy(home_inotify_args.path_to_watch, inotify_args.path_to_watch);
+        home_inotify_args.client_sock = inotify_args.client_sock;
+        home_inotify_args.port = inotify_args.port;
+        strcpy(home_inotify_args.server_port, inotify_args.server_port);
+        home_inotify_args.inotify_tid = inotify_args.inotify_tid;
+        strcpy(home_inotify_args.ip, inotify_args.ip);
 
 //Build homepage
         menuBuilder = gtk_builder_new_from_file("xml/homepage.glade");

@@ -70,15 +70,29 @@
           </packing>
         </child>
         <child>
-          <object class="GtkComboBox">
+          <object class="GtkButton" id="downloadButton">
+            <property name="label" translatable="yes">Download</property>
             <property name="width-request">100</property>
-            <property name="height-request">80</property>
+            <property name="height-request">20</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="x">507</property>
+            <property name="y">333</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkComboBoxText" id="comboBox">
+            <property name="width-request">87</property>
+            <property name="height-request">34</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
           </object>
           <packing>
-            <property name="x">517</property>
-            <property name="y">317</property>
+            <property name="x">412</property>
+            <property name="y">334</property>
           </packing>
         </child>
       </object>

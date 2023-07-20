@@ -10,8 +10,12 @@ GtkWidget *passwordEntry;
 GtkWidget *submitButton;
 GtkWidget *backButton;
 GtkBuilder *builder; 
-void on_submitButton_clicked(GtkButton *b);
+void on_submitButton_clicked(GtkButton *b){
+        gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameEntry));
+        gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordEntry));
+        printf("%s, %s", username, password);
 
+}
 GtkWidget* createRegisterView(int argc, char *argv[]){
 
         builder = gtk_builder_new_from_file("xml/register.glade");
@@ -28,12 +32,6 @@ GtkWidget* createRegisterView(int argc, char *argv[]){
         backButton = GTK_WIDGET(gtk_builder_get_object(builder, "backButton"));
         g_signal_connect(submitButton, "clicked", G_CALLBACK(on_submitButton_clicked), NULL);
 
-        return window;
+        return fixed;
 }
 
-void on_submitButton_clicked(GtkButton *b){
-        gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameEntry));
-        gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordEntry));
-        printf("%s, %s", username, password);
-
-}

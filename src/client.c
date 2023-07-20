@@ -12,6 +12,7 @@
 #include <sys/select.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 
 #define BUFF_SIZE 8192
 #define SIZE 1024
@@ -58,9 +59,90 @@ void receive_file(int src_sockfd, char filename[]);
 long get_file_size(FILE* file);
 void handle_receive_file_size(char buffer[SIZE], int* file_size);
 
+void* inotify_thread(void* arg); 
+char* get_input();
+bool handle_registration(int client_sock, const char* delimiter, char username[], char password[], char server_port[], char ip[]);
+bool handle_login(int client_sock, const char* delimiter, char* username, char* password, pthread_t inotify_tid, InotifyThreadArgs inotify_args);
+
 char path_to_be_watched[SIZE];
 char file_name_inserted[SIZE];
 
+bool handle_login(int client_sock, const char* delimiter, char* username, char* password, pthread_t inotify_tid, InotifyThreadArgs inotify_args) 
+{
+  const char *login_array[4] = { "2", "login", username, password };
+  int size = sizeof(login_array) / sizeof(login_array[0]);
+  char* constructed_string = construct_string(login_array, size, delimiter);
+  char buff[BUFF_SIZE];
+
+  int bytes_sent = send(client_sock, constructed_string, strlen(constructed_string), 0);
+  if (bytes_sent < 0) {
+    printf("\nError! Cannot send data to server! Client exits immediately!\n");
+    return false;
+  }
+
+  int bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
+  if (bytes_received < 0) {
+    printf("\nError! Cannot receive data from server! Client exits immediately!\n");
+    return false;
+  }
+  buff[bytes_received] = '\0';
+  printf("%s\n", buff);
+
+  if (strcmp(buff, "[server]: Login successfully!\n") == 0) 
+  {
+    // upload existing files
+    char* list_of_files[SIZE];
+
+    // Allocate memory for each file name
+    for (int i = 0; i < SIZE; i++) {
+      list_of_files[i] = (char*)malloc(SIZE);
+    }
+
+    int file_count = file_list(path_to_be_watched, list_of_files);
+    char* message = construct_string((const char**)list_of_files, file_count, delimiter);
+    int bytes_sent = send(client_sock, message, strlen(message), 0);
+    if (bytes_sent < 0) {
+      printf("\nError! Can not send data to server! Client exit immediately!\n");
+    }
+                  
+    strcpy(inotify_args.username, username);
+    pthread_create(&inotify_tid, NULL, inotify_thread, &inotify_args);
+    sleep(2); // Wait for 2 seconds
+    return true;
+  }
+  return false;
+}
+
+bool handle_registration(int client_sock, const char* delimiter, char username[], char password[], char server_port[], char ip[])
+{
+  char buff[BUFF_SIZE];
+  const char *register_array[6] = { "1", "register", username, password, server_port, ip };
+  int size = sizeof(register_array) / sizeof(register_array[0]);
+
+  char* constructed_str = construct_string(register_array, size, delimiter);
+
+  int bytes_sent = send(client_sock, constructed_str, strlen(constructed_str), 0);
+  if (bytes_sent < 0) {
+    printf("\nError! Cannot send data to server! Client exits immediately!\n");
+    exit(1);
+  }
+
+  int bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
+  if (bytes_received < 0) {
+    printf("\nError! Cannot receive data from server! Client exits immediately!\n");
+    exit(1);
+  }
+  buff[bytes_received] = '\0';
+  printf("%s\n", buff);
+  return true;
+}
+
+char* get_input() {
+    char* input = (char*)malloc(SIZE);
+    scanf("%s", input);
+    while (getchar() != '\n'); // Clear input buffer
+    return input;
+}
 
 void* inotify_thread(void* arg) {
     InotifyThreadArgs* args = (InotifyThreadArgs*)arg;
@@ -215,6 +297,7 @@ int main(int argc, char* argv[]) {
     char ip[INET_ADDRSTRLEN];
     const char* delimiter = ":";
     char server_port[SIZE];
+    bool success;
 
     if (argc != 5) {
         printf("[ERROR]: The client needs to be bound to an IP address, a client port, a peer server port, and a folder to trace changes.\n");
@@ -252,78 +335,22 @@ int main(int argc, char* argv[]) {
 
         printf("Password: ");
         scanf("%s", password);
-        //
-        // const char *info_array1[] = { "1", "register", username, password };
-        // const char* login_array1[] = { "2", "login", username, password };
-        const char *info_array[6] = { "1", "register", username, password, server_port, ip };
-        const char *login_array[4] = { "2", "login", username, password };
+
         const char *logout_array[3] = { "4", "logout", username };
         int size;
         //
         switch (choice) {
             case 1:
-                // info_array[4] = info_array1;
-                size = sizeof(info_array) / sizeof(info_array[0]);
-                char* constructed_string = construct_string(info_array, size, delimiter);
-
-                bytes_sent = send(client_sock, constructed_string, strlen(constructed_string), 0);
-                if (bytes_sent < 0) {
-                    printf("\nError! Cannot send data to server! Client exits immediately!\n");
-                    return 0;
-                }
-
-                bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
-                if (bytes_received < 0) {
-                    printf("\nError! Cannot receive data from server! Client exits immediately!\n");
-                    return 0;
-                }
-                buff[bytes_received] = '\0';
-                printf("%s\n", buff);
-
+                success = handle_registration(client_sock, delimiter, username, password, server_port, ip);
                 break;
 
             case 2:
                 // login_array[4] = login_array1;
-                size = sizeof(login_array) / sizeof(login_array[0]);
-                constructed_string = construct_string(login_array, size, delimiter);
-
-                bytes_sent = send(client_sock, constructed_string, strlen(constructed_string), 0);
-                if (bytes_sent < 0) {
-                    printf("\nError! Cannot send data to server! Client exits immediately!\n");
-                    return 0;
-                }
-
-                bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
-                if (bytes_received < 0) {
-                    printf("\nError! Cannot receive data from server! Client exits immediately!\n");
-                    return 0;
-                }
-                buff[bytes_received] = '\0';
-                printf("%s\n", buff);
-
-                if (strcmp(buff, "[server]: Login successfully!\n") == 0) 
-                {
-                  // upload existing files
-                  char* list_of_files[SIZE];
-
-                  // Allocate memory for each file name
-                  for (int i = 0; i < SIZE; i++) {
-                    list_of_files[i] = (char*)malloc(SIZE);
-                  }
-
-                  int file_count = file_list(path_to_be_watched, list_of_files);
-                  char* message = construct_string((const char**)list_of_files, file_count, delimiter);
-                  int bytes_sent = send(client_sock, message, strlen(message), 0);
-                  if (bytes_sent < 0) {
-                    printf("\nError! Can not send data to server! Client exit immediately!\n");
-                  }
-                  
-                  strcpy(inotify_args.username, username);
-                  pthread_create(&inotify_tid, NULL, inotify_thread, &inotify_args);
-                  sleep(2); // Wait for 2 seconds
-
+                success = handle_login(client_sock, delimiter, username, password, inotify_tid, inotify_args);
+               
+                if (success == true)
+        {
                 int server_fd;
-                
                 while (1) {
                     int sub_choice;
                     submenu();        
@@ -347,7 +374,7 @@ int main(int argc, char* argv[]) {
                         //logout
                         printf("loging out...\n");
                         size = sizeof(logout_array) / sizeof(logout_array[0]);
-                        constructed_string = construct_string(logout_array, size, delimiter);
+                        char* constructed_string = construct_string(logout_array, size, delimiter);
 
                         bytes_sent = send(client_sock, constructed_string, strlen(constructed_string), 0);
                         if (bytes_sent < 0) {

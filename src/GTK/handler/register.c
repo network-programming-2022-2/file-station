@@ -22,7 +22,6 @@ bool handle_registration(int client_sock, const char* delimiter, char username[]
     exit(1);
   }
   buff[bytes_received] = '\0';
-  printf("%s\n", buff);
   if (strcmp(buff, "[server]: Registered successfully!\n") == 0)
   {
     return true;

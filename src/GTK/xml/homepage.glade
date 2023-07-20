@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.40.0 -->
+<interface>
+  <requires lib="gtk+" version="3.24"/>
+  <object class="GtkWindow" id="window">
+    <property name="can-focus">False</property>
+    <child>
+      <object class="GtkFixed" id="fixed">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <child>
+          <object class="GtkButton" id="registerButton">
+            <property name="label" translatable="yes">REGISTER</property>
+            <property name="width-request">144</property>
+            <property name="height-request">34</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="x">147</property>
+            <property name="y">91</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="loginButton">
+            <property name="label" translatable="yes">LOGIN</property>
+            <property name="width-request">142</property>
+            <property name="height-request">34</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="x">149</property>
+            <property name="y">140</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="appNameLabel">
+            <property name="width-request">223</property>
+            <property name="height-request">57</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">P2P PROGRAM</property>
+          </object>
+          <packing>
+            <property name="x">101</property>
+            <property name="y">24</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

@@ -47,17 +47,21 @@ void submenu() {
 
 
 char* construct_string(const char** info_array, int size, const char* delimiter);
+
+void *inotify_thread(void *arg);
+
 int handle_download(char ip[INET_ADDRSTRLEN]);
 void *receive_thread(void *server_fd);
 char* receiving(int server_fd);
 void sending(char ip[INET_ADDRSTRLEN], int sender_port);
-int file_list(char path[SIZE], char* list_of_files[]);
+// int file_list(char path[SIZE]);
 int search_for_file(char path[SIZE], char file_name[SIZE]);
 void handle_req_string(char bufff[SIZE], int* des_port, char filename[SIZE]);
 void send_file(char ip[SIZE], int des_port, char filename[SIZE]);
 void receive_file(int src_sockfd, char filename[]);
 long get_file_size(FILE* file);
 void handle_receive_file_size(char buffer[SIZE], int* file_size);
+int file_list(char path[SIZE], char * list_of_file[]);
 
 void* inotify_thread(void* arg); 
 char* get_input();
@@ -66,6 +70,7 @@ bool handle_login(int client_sock, const char* delimiter, char* username, char* 
 
 char path_to_be_watched[SIZE];
 char file_name_inserted[SIZE];
+char server_port[SIZE];
 
 bool handle_login(int client_sock, const char* delimiter, char* username, char* password, pthread_t inotify_tid, InotifyThreadArgs inotify_args) 
 {
@@ -291,10 +296,9 @@ int main(int argc, char* argv[]) {
     char username[SIZE];
     char password[SIZE];
     struct sockaddr_in server_addr;
-    
+    char ip[INET_ADDRSTRLEN];
     int msg_len, bytes_sent, bytes_received, bytes_read, total_bytes_sent, total_bytes_received;
     int port;
-    char ip[INET_ADDRSTRLEN];
     const char* delimiter = ":";
     char server_port[SIZE];
     bool success;
@@ -361,6 +365,13 @@ int main(int argc, char* argv[]) {
 
                     if (sub_choice == 1) {
                         printf("chua xong ...\n");
+                        int f_num;
+                        char *list_of_file[100];
+                        f_num = file_list(path_to_be_watched, list_of_file);
+                        for (int i = 0; i < f_num ; i ++)
+                        {
+                          printf("\n%d: %s", i, list_of_file[i]);
+                        }
                         break;
                     }
                     else if (sub_choice == 2)
@@ -463,9 +474,9 @@ char* construct_string(const char** info_array, int size, const char* delimiter)
 }
 
 int handle_download(char ip[]){
-    int port;
-    printf("Enter your port number:");
-    scanf("%d", &port);
+    int port = atoi(server_port);
+    // printf("Enter your port number:");
+    // scanf("%d", &port);
     
     int server_fd, new_socket, valread;
     struct sockaddr_in address;
@@ -815,4 +826,145 @@ long get_file_size(FILE* file){
     long size = ftell(file);
     fseek(file, 0, SEEK_SET);
     return size;
+}
+
+void* inotify_thread(void* arg) {
+    InotifyThreadArgs* args = (InotifyThreadArgs*)arg;
+    char path_to_be_watched[SIZE];
+    strcpy(path_to_be_watched, args->path_to_watch);
+    int client_sock = args->client_sock;
+    char username[SIZE];
+    strcpy(username, args->username);
+    int fd, wd;
+    int length, i;
+    char buffer[BUF_LEN];
+    const char* delimiter = ":";
+
+    int is_moved = 0;
+    char original_file[BUF_LEN];
+
+    fd = inotify_init();
+    if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
+        printf("Error setting non-blocking flag\n");
+        exit(2);
+    }
+
+    wd = inotify_add_watch(fd, path_to_be_watched, IN_MOVED_TO | IN_MOVED_FROM | IN_CREATE | IN_DELETE);
+    if (wd == -1) {
+        printf("Could not watch : %s\n", path_to_be_watched);
+        pthread_exit(NULL);
+    }
+    else {
+        printf("Watching : %s\n", path_to_be_watched);
+    }
+
+    while (1) {
+        length = read(fd, buffer, BUF_LEN);
+        if (length < 0) {
+            continue;
+        }
+
+        i = 0;
+        while (i < length) {
+            struct inotify_event* event = (struct inotify_event*)&buffer[i];
+
+            if (event->len) {
+                if (event->mask & IN_CREATE) {
+                    if (event->mask & IN_ISDIR) {
+                        printf("\nThe directory %s was created.\n", event->name);
+                    }
+                    else {
+                        printf("\nThe file %s was created.\n", event->name);
+
+                        // Send the file name to the server
+                        const char* info_array[] = { "3", "upload", username, event->name };
+
+                        int size = sizeof(info_array) / sizeof(info_array[0]);
+                        char* message = construct_string(info_array, size, delimiter);
+                        
+                        int bytes_sent = send(client_sock, message, strlen(message), 0);
+                        if (bytes_sent < 0) {
+                          printf("\nError! Can not send data to server! Client exit immediately!\n");
+                        }
+                        printf("%s\n", message);
+
+                        int bytes_received = recv(client_sock, buffer, BUFF_SIZE, 0);
+                        if (bytes_received < 0) {
+                          printf("\nError! Can not receive data from server! Client exit immediately!\n"); 
+                        }
+                        printf("%s\n", buffer);
+                    }
+                }
+                else if (event->mask & IN_DELETE) {
+                    if (event->mask & IN_ISDIR) {
+                        printf("\nThe directory %s was deleted.\n", event->name);
+                    }
+                    else {
+                        printf("\nThe file %s was deleted.\n", event->name);
+
+                        // Send the file name to the server
+                        const char* del_info_array[] = { "3", "delete", username, event->name };
+
+                        int size = sizeof(del_info_array) / sizeof(del_info_array[0]);
+                        char* message = construct_string(del_info_array, size, delimiter);
+
+                        int bytes_sent = send(client_sock, message, strlen(message), 0);
+                        if (bytes_sent < 0) {
+                          printf("\nError! Can not send data to server! Client exit immediately!\n");
+                        }
+                        printf("%s\n", message);
+
+                        int bytes_received = recv(client_sock, buffer, BUFF_SIZE, 0);
+                        if (bytes_received < 0) {
+                          printf("\nError! Can not receive data from server! Client exit immediately!\n"); 
+                        }
+                        printf("%s\n", buffer);
+
+                    }
+                }
+                else if (event->mask & IN_MOVED_FROM) {
+                    if (event->mask & IN_ISDIR) {
+                        printf("\nThe directory %s was moved.\n", event->name);
+                    }
+                    else {
+                        printf("\nThe file %s was moved.\n", event->name);
+
+                        strcpy(original_file, event->name);
+                    }
+                }
+                else if (event->mask & IN_MOVED_TO) {
+                    if (event->mask & IN_ISDIR) {
+                        printf("\nThe directory was modified into %s.\n\n", event->name);
+                    }
+                    else {
+                        printf("\nThe file was modified into %s.\n\n", event->name);
+                        // Send the file name to the server
+                        const char* mod_info_array[] = { "3", "modify", username, event->name, original_file };
+
+                        int size = sizeof(mod_info_array) / sizeof(mod_info_array[0]);
+                        char* message = construct_string(mod_info_array, size, delimiter);
+
+                        int bytes_sent = send(client_sock, message, strlen(message), 0);
+                        if (bytes_sent < 0) {
+                          printf("\nError! Can not send data to server! Client exit immediately!\n");
+                        }
+                        printf("%s\n", message);
+
+                        int bytes_received = recv(client_sock, buffer, BUFF_SIZE, 0);
+                        if (bytes_received < 0) {
+                          printf("\nError! Can not receive data from server! Client exit immediately!\n"); 
+                        }
+                        printf("%s\n", buffer);
+
+                    }
+                }
+            }
+            i += EVENT_SIZE + event->len;
+        }
+    }
+
+    inotify_rm_watch(fd, wd);
+    close(fd);
+
+    pthread_exit(NULL);
 }

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.40.0 -->
+<interface>
+  <requires lib="gtk+" version="3.24"/>
+  <object class="GtkWindow" id="menuWindow">
+    <property name="can-focus">False</property>
+    <child>
+      <object class="GtkFixed" id="menuFixed">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <child>
+          <object class="GtkLabel" id="menuLabel">
+            <property name="width-request">261</property>
+            <property name="height-request">28</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">MENU</property>
+          </object>
+          <packing>
+            <property name="x">94</property>
+            <property name="y">25</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="searchButton">
+            <property name="label" translatable="yes">Search</property>
+            <property name="width-request">100</property>
+            <property name="height-request">34</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="x">174</property>
+            <property name="y">70</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="downloadButton">
+            <property name="label" translatable="yes">Download</property>
+            <property name="width-request">100</property>
+            <property name="height-request">34</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="x">173</property>
+            <property name="y">115</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="logoutButton">
+            <property name="label" translatable="yes">Log Out</property>
+            <property name="width-request">100</property>
+            <property name="height-request">20</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="x">174</property>
+            <property name="y">159</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

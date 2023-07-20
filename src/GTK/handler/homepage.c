@@ -1,5 +1,4 @@
 #include<gtk/gtk.h>
-#include "register.c"
 #include "login.c"
 
 GtkWidget *window;
@@ -8,10 +7,46 @@ GtkWidget *registerButton;
 GtkWidget *loginButton;
 GtkWidget *appNameLabel;
 GtkBuilder *builder; 
-void on_registerButton_clicked(GtkButton *b,int argc, char *argv[]);
-void on_loginButton_clicked(GtkButton *b,int argc, char *argv[]);
-int createHomePageView(int argc, char *argv[]){
-        gtk_init(&argc, &argv);
+
+GtkWidget *registerWindow;
+GtkWidget *registerFixed;
+GtkWidget *registerLabel;
+GtkWidget *usernameRegisterLabel;
+GtkWidget *passwordRegisterLabel;
+GtkWidget *usernameRegisterEntry;
+GtkWidget *passwordRegisterEntry;
+GtkWidget *submitRegisterButton;
+GtkWidget *backRegisterButton;
+GtkBuilder *builderRegister; 
+
+void on_registerButton_clicked(GtkButton *b,int argc, char *argv[]){
+        // gtk_container_remove(GTK_CONTAINER(window), GTK_WIDGET(fixed));
+        // gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(registerFixed));
+        gtk_widget_hide(window);
+        gtk_widget_show(registerWindow);
+       
+}
+void on_loginButton_clicked(GtkButton *b,int argc, char *argv[]){
+        gtk_widget_hide(window);
+        gtk_widget_show(loginWindow);
+       
+}
+/// REGISTER
+
+void on_submitRegisterButton_clicked(GtkButton *b){
+        gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameRegisterEntry));
+        gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordRegisterEntry));
+        printf("%s, %s", username, password);
+
+}
+void on_backRegisterButton_clicked(GtkButton *b,int argc, char *argv[]){
+
+        gtk_widget_hide(registerWindow);
+        gtk_widget_show(window);
+       
+}
+
+GtkWidget* createHomePageView(int argc, char *argv[]){
 
         builder = gtk_builder_new_from_file("xml/homepage.glade");
         window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
@@ -24,22 +59,42 @@ int createHomePageView(int argc, char *argv[]){
         g_signal_connect(registerButton, "clicked", G_CALLBACK(on_registerButton_clicked), NULL);
         g_signal_connect(loginButton, "clicked", G_CALLBACK(on_loginButton_clicked), NULL);
 
-        gtk_widget_show_all(window);
-        gtk_main();
-        return EXIT_SUCCESS;
+        builderRegister = gtk_builder_new_from_file("xml/register.glade");
+        registerWindow = GTK_WIDGET(gtk_builder_get_object(builderRegister, "registerWindow"));
+        g_signal_connect(registerWindow, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+
+        registerFixed = GTK_WIDGET(gtk_builder_get_object(builderRegister, "registerFixed"));
+        registerLabel = GTK_WIDGET(gtk_builder_get_object(builderRegister, "registerLabel"));
+        usernameRegisterLabel = GTK_WIDGET(gtk_builder_get_object(builderRegister, "usernameLabel"));
+        passwordRegisterLabel = GTK_WIDGET(gtk_builder_get_object(builderRegister, "passwordLabel"));
+        usernameRegisterEntry = GTK_WIDGET(gtk_builder_get_object(builderRegister, "usernameEntry"));
+        passwordRegisterEntry = GTK_WIDGET(gtk_builder_get_object(builderRegister, "passwordEntry"));
+        submitRegisterButton = GTK_WIDGET(gtk_builder_get_object(builderRegister, "submitButton"));
+        backRegisterButton = GTK_WIDGET(gtk_builder_get_object(builderRegister, "backButton"));
+        g_signal_connect(submitRegisterButton, "clicked", G_CALLBACK(on_submitRegisterButton_clicked), NULL);
+        g_signal_connect(backRegisterButton, "clicked", G_CALLBACK(on_backRegisterButton_clicked), NULL);
+
+
+        return window;
 }
 
-void on_registerButton_clicked(GtkButton *b,int argc, char *argv[]){
-        GtkWidget *registerFixed = createRegisterView(&argc, &argv);
-        gtk_container_remove(GTK_CONTAINER(window), GTK_WIDGET(fixed));
-        gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(registerFixed));
-        gtk_widget_show_all(window);
-       
-}
-void on_loginButton_clicked(GtkButton *b,int argc, char *argv[]){
-        GtkWidget *loginFixed = createLoginView(&argc, &argv);
-        gtk_container_remove(GTK_CONTAINER(window), GTK_WIDGET(fixed));
-        gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(loginFixed));
-        gtk_widget_show_all(window);
-       
-}
+
+// GtkWidget* createRegisterView(int argc, char *argv[]){
+
+//         builderRegister = gtk_builder_new_from_file("xml/register.glade");
+//         registerWindow = GTK_WIDGET(gtk_builder_get_object(builderRegister, "registerWindow"));
+//         g_signal_connect(registerWindow, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+
+//         registerFixed = GTK_WIDGET(gtk_builder_get_object(builderRegister, "registerFixed"));
+//         registerLabel = GTK_WIDGET(gtk_builder_get_object(builderRegister, "registerLabel"));
+//         usernameRegisterLabel = GTK_WIDGET(gtk_builder_get_object(builderRegister, "usernameLabel"));
+//         passwordRegisterLabel = GTK_WIDGET(gtk_builder_get_object(builderRegister, "passwordLabel"));
+//         usernameRegisterEntry = GTK_WIDGET(gtk_builder_get_object(builderRegister, "usernameEntry"));
+//         passwordRegisterEntry = GTK_WIDGET(gtk_builder_get_object(builderRegister, "passwordEntry"));
+//         submitRegisterButton = GTK_WIDGET(gtk_builder_get_object(builderRegister, "submitButton"));
+//         backRegisterButton = GTK_WIDGET(gtk_builder_get_object(builderRegister, "backButton"));
+//         g_signal_connect(submitRegisterButton, "clicked", G_CALLBACK(on_submitRegisterButton_clicked), NULL);
+//         g_signal_connect(backRegisterButton, "clicked", G_CALLBACK(on_backRegisterButton_clicked), NULL);
+
+//         return registerFixed;
+// }

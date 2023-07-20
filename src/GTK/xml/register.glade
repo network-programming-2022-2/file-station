@@ -26,6 +26,7 @@
             <property name="height-request">34</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="visibility">False</property>
           </object>
           <packing>
             <property name="x">190</property>
@@ -79,6 +80,7 @@
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
+            <signal name="clicked" handler="on_submitButton_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="x">172</property>

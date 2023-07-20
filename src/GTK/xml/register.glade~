@@ -26,8 +26,6 @@
             <property name="height-request">34</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
-            <property name="visibility">False</property>
-            <property name="input-purpose">password</property>
           </object>
           <packing>
             <property name="x">190</property>
@@ -35,12 +33,12 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="loginLabel">
+          <object class="GtkLabel" id="registerLabel">
             <property name="width-request">261</property>
             <property name="height-request">28</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="label" translatable="yes">LOGIN</property>
+            <property name="label" translatable="yes">REGISTER</property>
           </object>
           <packing>
             <property name="x">94</property>

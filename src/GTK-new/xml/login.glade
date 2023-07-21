@@ -3,21 +3,27 @@
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkWindow" id="loginWindow">
+    <property name="width-request">1000</property>
+    <property name="height-request">500</property>
     <property name="can-focus">False</property>
+    <property name="window-position">center</property>
+    <property name="gravity">center</property>
     <child>
       <object class="GtkFixed" id="loginFixed">
+        <property name="width-request">1000</property>
+        <property name="height-request">500</property>
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <child>
           <object class="GtkEntry" id="usernameEntry">
             <property name="width-request">169</property>
-            <property name="height-request">34</property>
+            <property name="height-request">36</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
           </object>
           <packing>
-            <property name="x">189</property>
-            <property name="y">68</property>
+            <property name="x">502</property>
+            <property name="y">107</property>
           </packing>
         </child>
         <child>
@@ -30,8 +36,8 @@
             <property name="input-purpose">password</property>
           </object>
           <packing>
-            <property name="x">190</property>
-            <property name="y">111</property>
+            <property name="x">504</property>
+            <property name="y">161</property>
           </packing>
         </child>
         <child>
@@ -41,10 +47,13 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">LOGIN</property>
+            <attributes>
+              <attribute name="font-desc" value="Adelle Sans Devanagari Semi-Bold 20"/>
+            </attributes>
           </object>
           <packing>
-            <property name="x">94</property>
-            <property name="y">25</property>
+            <property name="x">408</property>
+            <property name="y">62</property>
           </packing>
         </child>
         <child>
@@ -56,8 +65,8 @@
             <property name="label" translatable="yes">Username</property>
           </object>
           <packing>
-            <property name="x">84</property>
-            <property name="y">68</property>
+            <property name="x">403</property>
+            <property name="y">110</property>
           </packing>
         </child>
         <child>
@@ -69,8 +78,8 @@
             <property name="label" translatable="yes">Password</property>
           </object>
           <packing>
-            <property name="x">84</property>
-            <property name="y">113</property>
+            <property name="x">404</property>
+            <property name="y">162</property>
           </packing>
         </child>
         <child>
@@ -84,22 +93,22 @@
             <signal name="clicked" handler="on_submitButton_clicked" swapped="no"/>
           </object>
           <packing>
-            <property name="x">172</property>
-            <property name="y">172</property>
+            <property name="x">485</property>
+            <property name="y">255</property>
           </packing>
         </child>
         <child>
           <object class="GtkButton" id="backButton">
             <property name="label" translatable="yes">Back</property>
-            <property name="width-request">28</property>
-            <property name="height-request">20</property>
+            <property name="width-request">61</property>
+            <property name="height-request">34</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
           </object>
           <packing>
-            <property name="x">7</property>
-            <property name="y">9</property>
+            <property name="x">18</property>
+            <property name="y">18</property>
           </packing>
         </child>
       </object>

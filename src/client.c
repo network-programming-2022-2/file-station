@@ -64,10 +64,51 @@ char* get_input();
 bool handle_registration(int client_sock, const char* delimiter, char username[], char password[], char server_port[], char ip[]);
 bool handle_login(int client_sock, const char* delimiter, char* username, char* password, pthread_t inotify_tid, InotifyThreadArgs inotify_args);
 bool handle_logout(int client_sock, const char* delimiter, char username[]);
+bool handle_search(int client_sock, const char* delimiter, char username[], char filename[], SearchResult* result[])
 
 char path_to_be_watched[SIZE];
 char file_name_inserted[SIZE];
 char server_port[SIZE];
+
+char** extract_information(const char* str, int* count, const char* delimiter) 
+{
+  char* copy = (char*)malloc(strlen(str) + 1);
+  if (copy != NULL) 
+    strcpy(copy, str);
+
+  char* token = strtok(copy, delimiter); // Get the first token
+  *count = 0;
+
+  // Count the number of tokens
+  while (token != NULL) 
+  {
+    (*count)++;
+    token = strtok(NULL, delimiter); // Get the next token
+  }
+
+  // Allocate memory for the array of tokens
+  char** info_array = (char**)malloc((*count) * sizeof(char*));
+
+  // Reset the copy string and tokenize again to populate the array
+  strcpy(copy, str);
+  token = strtok(copy, delimiter); // Get the first token
+  int i = 0;
+
+  while (token != NULL) 
+  {
+    // Allocate memory for the current token
+    info_array[i] = (char*)malloc(strlen(token) + 1);
+    if (info_array[i] != NULL) {
+      strcpy(info_array[i], token);
+      token = strtok(NULL, delimiter); // Get the next token
+      i++;
+    }
+  }
+
+  free(copy); // Free the copied string
+
+  return info_array;
+}
 
 bool handle_logout(int client_sock, const char* delimiter, char username[])
 {
@@ -165,6 +206,43 @@ bool handle_registration(int client_sock, const char* delimiter, char username[]
   return true;
 }
 
+bool handle_search(int client_sock, const char* delimiter, char username[], char filename[], SearchResult* result[])
+{
+  char buff[BUFF_SIZE];
+  const char *search_array[3] = { "5", "search", username, filename };
+  int size = sizeof(search_array) / sizeof(search_array[0]);
+
+  char* constructed_str = construct_string(search_array, size, delimiter);
+
+  int bytes_sent = send(client_sock, constructed_str, strlen(constructed_str), 0);
+  if (bytes_sent < 0) {
+    printf("\nError! Cannot send data to server! Client exits immediately!\n");
+    exit(1);
+  }
+
+  int bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
+  if (bytes_received < 0) {
+    printf("\nError! Cannot receive data from server! Client exits immediately!\n");
+    exit(1);
+  }
+  buff[bytes_received] = '\0';
+
+  if (strcmp(buff, "[server]: Search failed!\n") == 0)
+  {
+    return false;
+  }
+
+  char** result_list = extract_information(buff, &count, "\\");
+
+  for (int i = 0; i < count; i++)
+  {
+    char** fields = extract_information(result_list[i], &count, ":");
+    result[i] = { fields[0], fields[1], fields[2], fields[3], fields[4], fields[5] };
+  }
+
+  return true;
+}
+
 char* get_input() {
     char* input = (char*)malloc(SIZE);
     scanf("%s", input);
@@ -246,13 +324,15 @@ int main(int argc, char* argv[]) {
                     getchar();
 
                     if (sub_choice == 1) {
-                        printf("chua xong ...\n");
-                        int f_num;
-                        char *list_of_file[100];
-                        f_num = file_list(path_to_be_watched, list_of_file);
-                        for (int i = 0; i < f_num ; i ++)
+                        SearchResult result[SIZE];
+                        success = handle_search(client_sock, delimiter, username, filename, &result);
+                        if (success == true)
                         {
-                          printf("\n%d: %s", i, list_of_file[i]);
+                          printf("searching ...\n");
+                          printf("%s", result.filename);
+                        }
+                        else {
+                          printf("search failed...\n");
                         }
                         break;
                     }

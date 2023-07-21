@@ -119,6 +119,34 @@ void delete_client(Client arr[], int size, int index)
   }
 }
 
+char* construct_string(const char** info_array, int size, const char* delimiter) {
+    int total_length = 0;
+
+    // Calculate the total length of the constructed string
+    for (int i = 0; i < size; i++) {
+        total_length += strlen(info_array[i]);
+    }
+
+    // Add space for delimiters and null terminator
+    total_length += (size - 1) * strlen(delimiter) + 1;
+
+    // Allocate memory for the constructed string
+    char* constructed_string = (char*)malloc(total_length * sizeof(char));
+    constructed_string[0] = '\0'; // Initialize as an empty string
+
+    // Construct the string by joining elements with the delimiter
+    for (int i = 0; i < size; i++) {
+        strcat(constructed_string, info_array[i]);
+
+        // Append delimiter if it's not the last element
+        if (i < size - 1) {
+            strcat(constructed_string, delimiter);
+        }
+    }
+
+    return constructed_string;
+}
+
 void *login_handler(void *arg)
 {
 	int connfd;
@@ -288,6 +316,40 @@ void *login_handler(void *arg)
           perror("\n[server]: ");
         printf("%s\n\n", message);
       break;
+
+      case 5:
+      for (int i = 0; i < client_index; i++)
+      {
+        if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
+        {
+          check = 1;
+          SearchResult result[BUFF_SIZE];
+          bool ok = search_files(info_array[3], &result);
+          if (!ok)
+          {
+            strcpy(message, "[server]: File not found!\n");
+          }
+          else
+          {
+            for (int i = 0; i < BUFF_SIZE; i++)
+            {
+              char* message = construct_string(result, size, delimiter);
+            }
+          }
+          break;
+        } 
+      }
+      if (check == 0)
+      {
+        strcpy(message, "[server]: Have to login first!\n");
+      }
+
+      bytes_sent = send(connfd, message, BUFF_SIZE, 0);
+        if (bytes_sent < 0)
+          perror("\n[server]: ");
+        printf("%s\n\n", message);
+      break;
+
     }
   }
  

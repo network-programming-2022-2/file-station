@@ -45,3 +45,23 @@ bool update_file_name(const char* old_filename, const char* filename, const char
   update_file_by_id(file.file_id, file);
   return true;
 }
+
+bool search_files(const char* filename, SearchResult* result[])
+{
+  FileResult files = get_files_by_filename(filename);
+  if (files.num_files == 0)
+    return false;
+
+  for (int i = 0; i < files.num_files; i++)
+  {
+    strcpy(result[i]->filename, files.files[i].filename);
+    result[i]->file_id = files.files[i].file_id;
+    result[i]->downloaded_numbers = files.files[i].downloaded_numbers;
+    strcpy(result[i]->username, files.files[i].username);
+    strcpy(result[i]->ip, files.files[i].ip);
+    result[i]->port = files.files[i].port;
+  }
+
+  return true;
+}
+

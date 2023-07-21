@@ -2,11 +2,7 @@
 #include "../main.h"
 #include "register.c"
 #include "login.c"
-<<<<<<< HEAD
-#include "search_func.c"
-=======
 #include "logout.c"
->>>>>>> 63816ff3b3fa7ef83d05a909b0da689f4095126f
 
 InotifyThreadArgs home_inotify_args;
 
@@ -131,7 +127,7 @@ void on_logoutMenuButton_clicked(GtkButton *b){
 }
 //Search
 void on_downloadButton_clicked(GtkWidget *button) {
-
+        printf("button clicked");
 }
 void on_backSearchButton_clicked(GtkButton *b,int argc, char *argv[]){
         gtk_widget_hide(searchWindow);
@@ -143,34 +139,9 @@ typedef struct {
     char *port;
 } RowData;
 void on_searchButton_clicked(GtkWidget *button) {
-<<<<<<< HEAD
-        const gchar *search_entry = gtk_entry_get_text(GTK_ENTRY(searchEntry));
-        char search_str[SIZE];
-        strcpy(search_str, search_entry);
-        GtkListStore *list_store = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
-        GtkTreeIter iter;
-        //     gtk_list_store_clear(list_store);
-        gtk_list_store_append(list_store, &iter);
-        gtk_list_store_set(list_store, &iter, 0, "John", 1, "1.1.1.1", 2, "1234", -1);
-        gtk_list_store_append(list_store, &iter);
-        gtk_list_store_set(list_store, &iter, 0, "Jane", 1, "1.2.3.4", 2, "2345", -1);
-        gtk_list_store_append(list_store, &iter);
-        gtk_list_store_set(list_store, &iter, 0, "Bob", 1, "2.2.2.2", 2, "8888", -1);
-
-        // Set the model for the new tree view
-        gtk_tree_view_set_model(treeView, GTK_TREE_MODEL(list_store));
-
-        // Create the TreeViewColumns
-        GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-        GtkTreeViewColumn *column_user = gtk_tree_view_column_new_with_attributes("User", renderer, "text", 0, NULL);
-        GtkTreeViewColumn *column_ip = gtk_tree_view_column_new_with_attributes("IP", renderer, "text", 1, NULL);
-        GtkTreeViewColumn *column_port = gtk_tree_view_column_new_with_attributes("Port", renderer, "text", 2, NULL);
-
-        // Add the columns to the new tree view
-        gtk_tree_view_append_column(treeView, column_user);
-        gtk_tree_view_append_column(treeView, column_ip);
-        gtk_tree_view_append_column(treeView, column_port);
-=======
+    printf("hello world");
+    const gchar *search_str = gtk_entry_get_text(GTK_ENTRY(searchEntry));
+    printf("%d",search(search_str));
     gtk_combo_box_text_remove_all(comboBox);
 
     RowData array[10];
@@ -215,7 +186,6 @@ void on_searchButton_clicked(GtkWidget *button) {
         snprintf(text, sizeof(text), "%d", i);
         gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboBox), text);
     }
->>>>>>> 63816ff3b3fa7ef83d05a909b0da689f4095126f
 }
 
 GtkWidget* createHomePageView(InotifyThreadArgs inotify_args){

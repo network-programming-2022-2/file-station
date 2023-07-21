@@ -32,6 +32,9 @@ char path_to_be_watched[SIZE];
 char file_name_inserted[SIZE];
 char server_port[SIZE];
 
+void test(){
+  printf("from download.c");
+}
 
 int handle_download(char ip[]){
     int port = atoi(server_port);

@@ -4,6 +4,7 @@
 #include "login.c"
 #include "logout.c"
 #include "search_func.c"
+#incldue "download.c"
 
 InotifyThreadArgs home_inotify_args;
 
@@ -129,6 +130,7 @@ void on_logoutMenuButton_clicked(GtkButton *b){
 //Search
 void on_downloadButton_clicked(GtkWidget *button) {
         printf("button clicked");
+        test();
 }
 void on_backSearchButton_clicked(GtkButton *b,int argc, char *argv[]){
         gtk_widget_hide(searchWindow);

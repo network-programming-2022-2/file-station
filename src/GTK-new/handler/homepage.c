@@ -2,6 +2,7 @@
 #include "../main.h"
 #include "register.c"
 #include "login.c"
+#include "search_func.c"
 
 InotifyThreadArgs home_inotify_args;
 
@@ -60,8 +61,8 @@ void on_loginButton_clicked(GtkButton *b,int argc, char *argv[]){
 /// REGISTER
 
 void on_submitRegisterButton_clicked(GtkButton *b){
-        gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameRegisterEntry));
-        gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordRegisterEntry));
+        const gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameRegisterEntry));
+        const gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordRegisterEntry));
 
         strcpy(home_inotify_args.username, username);
         bool ok = handle_registration(":", password, home_inotify_args);
@@ -83,8 +84,8 @@ void on_backRegisterButton_clicked(GtkButton *b,int argc, char *argv[]){
 }
 //Login
 void on_submitLoginButton_clicked(GtkButton *b){
-        gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameLoginEntry));
-        gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordLoginEntry));
+        const gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameLoginEntry));
+        const gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordLoginEntry));
         strcpy(home_inotify_args.username, username);
         bool ok = handle_login(":", password, home_inotify_args);
         fflush(stdout);
@@ -112,29 +113,32 @@ void on_logoutMenuButton_clicked(GtkButton *b){
 }
 //Search
 void on_searchButton_clicked(GtkWidget *button) {
-    GtkListStore *list_store = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
-    GtkTreeIter iter;
-    gtk_list_store_append(list_store, &iter);
-    gtk_list_store_set(list_store, &iter, 0, "John", 1, "1.1.1.1", 2, "1234", -1);
-    gtk_list_store_append(list_store, &iter);
-    gtk_list_store_set(list_store, &iter, 0, "Jane", 1, "1.2.3.4", 2, "2345", -1);
-    gtk_list_store_append(list_store, &iter);
-    gtk_list_store_set(list_store, &iter, 0, "Bob", 1, "2.2.2.2", 2, "8888", -1);
+        const gchar *search_entry = gtk_entry_get_text(GTK_ENTRY(searchEntry));
+        char search_str[SIZE];
+        strcpy(search_str, search_entry);
+        GtkListStore *list_store = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+        GtkTreeIter iter;
+        //     gtk_list_store_clear(list_store);
+        gtk_list_store_append(list_store, &iter);
+        gtk_list_store_set(list_store, &iter, 0, "John", 1, "1.1.1.1", 2, "1234", -1);
+        gtk_list_store_append(list_store, &iter);
+        gtk_list_store_set(list_store, &iter, 0, "Jane", 1, "1.2.3.4", 2, "2345", -1);
+        gtk_list_store_append(list_store, &iter);
+        gtk_list_store_set(list_store, &iter, 0, "Bob", 1, "2.2.2.2", 2, "8888", -1);
 
-    // Set the model for the new tree view
-    gtk_tree_view_set_model(treeView, GTK_TREE_MODEL(list_store));
+        // Set the model for the new tree view
+        gtk_tree_view_set_model(treeView, GTK_TREE_MODEL(list_store));
 
-    // Create the TreeViewColumns
-    GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-    GtkTreeViewColumn *column_user = gtk_tree_view_column_new_with_attributes("User", renderer, "text", 0, NULL);
-    GtkTreeViewColumn *column_ip = gtk_tree_view_column_new_with_attributes("IP", renderer, "text", 1, NULL);
-    GtkTreeViewColumn *column_port = gtk_tree_view_column_new_with_attributes("Port", renderer, "text", 2, NULL);
+        // Create the TreeViewColumns
+        GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+        GtkTreeViewColumn *column_user = gtk_tree_view_column_new_with_attributes("User", renderer, "text", 0, NULL);
+        GtkTreeViewColumn *column_ip = gtk_tree_view_column_new_with_attributes("IP", renderer, "text", 1, NULL);
+        GtkTreeViewColumn *column_port = gtk_tree_view_column_new_with_attributes("Port", renderer, "text", 2, NULL);
 
-
-    // Add the columns to the new tree view
-    gtk_tree_view_append_column(treeView, column_user);
-    gtk_tree_view_append_column(treeView, column_ip);
-    gtk_tree_view_append_column(treeView, column_port);
+        // Add the columns to the new tree view
+        gtk_tree_view_append_column(treeView, column_user);
+        gtk_tree_view_append_column(treeView, column_ip);
+        gtk_tree_view_append_column(treeView, column_port);
 }
 
 GtkWidget* createHomePageView(InotifyThreadArgs inotify_args){

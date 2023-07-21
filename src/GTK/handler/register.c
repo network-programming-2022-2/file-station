@@ -68,8 +68,8 @@ GtkWidget* createRegisterView(InotifyThreadArgs inotify_args){
 }
 
 void on_submitButton_clicked(GtkButton *b){
-        gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameEntry));
-        gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordEntry));
+        const gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameEntry));
+        const gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordEntry));
         strcpy(register_inotify_args.username, username);
         bool success = handle_registration(":", password, register_inotify_args);
         if (success)

@@ -21,3 +21,5 @@ GtkWidget* createSearchView(int argc, char *argv[]){
 
         return fixed;
 }
+
+

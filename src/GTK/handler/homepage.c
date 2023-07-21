@@ -1,4 +1,4 @@
-#include<gtk/gtk.h>
+#include <gtk/gtk.h>
 #include "register.c"
 #include "login.c"
 #include "../main.h"

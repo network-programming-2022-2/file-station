@@ -230,8 +230,8 @@ GtkWidget *backButton;
 GtkBuilder *builder; 
 InotifyThreadArgs login_inotify_args;
 void on_submitButton2_clicked(GtkButton *b){
-        gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameEntry));
-        gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordEntry));
+        const gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameEntry));
+        const gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordEntry));
  
         printf("%s %s\n", username, password);
         strcpy(login_inotify_args.username, username);

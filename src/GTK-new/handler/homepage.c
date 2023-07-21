@@ -3,6 +3,7 @@
 #include "register.c"
 #include "login.c"
 #include "logout.c"
+#include "search_func.c"
 
 InotifyThreadArgs home_inotify_args;
 

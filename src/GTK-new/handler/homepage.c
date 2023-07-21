@@ -53,6 +53,8 @@ GtkWidget *comboBox;
 GtkWidget *backSearchButton;
 GtkWidget *downloadButton;
 GtkListStore *list_store;
+GtkWidget *notifyLabel;
+
 
 void on_registerButton_clicked(GtkButton *b){
         gtk_widget_hide(window);
@@ -127,6 +129,7 @@ void on_logoutMenuButton_clicked(GtkButton *b){
 }
 //Search
 void on_downloadButton_clicked(GtkWidget *button) {
+        gtk_label_set_text(GTK_LABEL(notifyLabel), "Download Successfully!");
 
 }
 void on_backSearchButton_clicked(GtkButton *b,int argc, char *argv[]){
@@ -140,6 +143,7 @@ typedef struct {
 } RowData;
 void on_searchButton_clicked(GtkWidget *button) {
     gtk_combo_box_text_remove_all(comboBox);
+    gtk_label_set_text(GTK_LABEL(notifyLabel), "");
 
     RowData array[10];
     for (int i = 0; i < 10; i++) {
@@ -265,6 +269,7 @@ GtkWidget* createHomePageView(InotifyThreadArgs inotify_args){
         comboBox = GTK_WIDGET(gtk_builder_get_object(searchBuilder, "comboBox"));
         backSearchButton = GTK_WIDGET(gtk_builder_get_object(searchBuilder, "backSearchButton"));
         downloadButton = GTK_WIDGET(gtk_builder_get_object(searchBuilder, "downloadButton"));
+        notifyLabel = GTK_WIDGET(gtk_builder_get_object(searchBuilder, "notifyLabel"));
 
 
         g_signal_connect(searchButton, "clicked", G_CALLBACK(on_searchButton_clicked), NULL);

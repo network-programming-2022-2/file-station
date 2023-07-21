@@ -127,6 +127,23 @@
             <property name="y">307</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkLabel" id="notifyLabel">
+            <property name="width-request">203</property>
+            <property name="height-request">28</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <attributes>
+              <attribute name="font-desc" value="Adelle Sans Devanagari Semi-Bold 10"/>
+              <attribute name="weight" value="ultraheavy"/>
+              <attribute name="foreground" value="#2626a2a26969"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="x">413</property>
+            <property name="y">385</property>
+          </packing>
+        </child>
       </object>
     </child>
   </object>

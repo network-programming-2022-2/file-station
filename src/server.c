@@ -11,6 +11,8 @@
 #include "models/postgresql/postgresql.h"
 #include "controllers/user_controller.h"
 #include "controllers/file_controller.h"
+#include "models/postgresql/file.h"
+#include "models/postgresql/user.h"
 
 #define BACKLOG 20   /* Number of allowed connections */
 #define BUFF_SIZE 1024
@@ -136,6 +138,7 @@ void *login_handler(void *arg)
   {
     // 1:register:username:password
     // 2:login:username:password
+    // 5:search:filename
     bytes_received = recv(connfd, buff, BUFF_SIZE, 0);
     if (bytes_received < 0)
       perror("\n[server]: ");
@@ -150,150 +153,161 @@ void *login_handler(void *arg)
     // 
     int is_logged_in;
     int check;
+    char reply_search[100];
+
     //
     switch (choice)
     {
       case 1:
-      ok = register_user(info_array[2], info_array[3], info_array[4], info_array[5]);
-      if (!ok)
-      {
-        strcpy(message, "[server]: Username already exists!\n");
-      }
-      else 
-      {
-        strcpy(message, "[server]: Registered successfully!\n");
-      }
-      bytes_sent = send(connfd, message, BUFF_SIZE, 0);
-      if (bytes_sent < 0)
-        perror("\n[server]: ");
-
-      printf("%s\n\n", message);
-      break;
-
-      case 2:
-      is_logged_in = 0;
-      for (int i = 0; i < client_index; i++)
-      {
-        if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd != connfd || strcmp(clients[i].username, info_array[2]) != 0 && clients[i].connfd == connfd)
-        {
-          strcpy(message, "[server]: Account already logged in on another device!\n");
-          is_logged_in = 1;
-          break;
-        }
-        else if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
-        {
-          strcpy(message, "[server]: You are already logged in!\n");
-          is_logged_in = 1;
-          break;
-        } 
-      }
-
-      if (!is_logged_in)
-      {
-        ok = check_credentials(info_array[2], info_array[3]);
+        ok = register_user(info_array[2], info_array[3], info_array[4], info_array[5]);
         if (!ok)
         {
-          strcpy(message, "[server]: Incorrect username or password!\n");
+          strcpy(message, "[server]: Username already exists!\n");
         }
         else 
         {
-          strcpy(message, "[server]: Login successfully!\n");
-          clients[client_index].connfd = connfd;
-          strcpy(clients[client_index++].username, info_array[2]);
-          bytes_sent = send(connfd, message, BUFF_SIZE, 0);
-          if (bytes_sent < 0)
-            perror("\n[server]: ");
-          printf("%s\n\n", message);
-
-          // upload existing files
-          bytes_received = recv(connfd, buff, BUFF_SIZE, 0);
-          if (bytes_received < 0)
-            perror("\n[server]: ");
-
-          buff[bytes_received] = '\0';
-
-          int file_count;
-          char** files = extract_information(buff, &file_count);
-          for (int i = 0; i < file_count; i++)
-          {
-            bool ok = upload_file(files[i], info_array[2]);
-            if (!ok)
-            {
-              printf("[server]: File upload failed!\n");
-            }
-          }
-          printf("[server]: Files upload successfully!\n");
-          break;
+          strcpy(message, "[server]: Registered successfully!\n");
         }
-      }
-      
-      bytes_sent = send(connfd, message, BUFF_SIZE, 0);
-      if (bytes_sent < 0)
-        perror("\n[server]: ");
-      printf("%s\n\n", message);
-      break;
+        bytes_sent = send(connfd, message, BUFF_SIZE, 0);
+        if (bytes_sent < 0)
+          perror("\n[server]: ");
 
-      case 3:
-      // int check;
+        printf("%s\n\n", message);
+        break;
 
-      for (int i = 0; i < client_index; i++)
-      {
-        if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
+      case 2:
+        is_logged_in = 0;
+        for (int i = 0; i < client_index; i++)
         {
-          check = 1;
-
-          // Create a file update struct to pass to the file_update_handler thread
-          strcpy(clients[i].filename, info_array[3]);
-          strcpy(clients[i].method, info_array[1]);
-          if (count == 5)
-            strcpy(clients[i].old_filename, info_array[4]);
-
-          // Create a new thread to handle the file update
-          pthread_t file_update_tid;
-          pthread_create(&file_update_tid, NULL, file_upload_handler, &clients[i]);
-          break;
+          if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd != connfd || strcmp(clients[i].username, info_array[2]) != 0 && clients[i].connfd == connfd)
+          {
+            strcpy(message, "[server]: Account already logged in on another device!\n");
+            is_logged_in = 1;
+            break;
+          }
+          else if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
+          {
+            strcpy(message, "[server]: You are already logged in!\n");
+            is_logged_in = 1;
+            break;
+          } 
         }
-      }
-      if (check == 0)
-      {
-        strcpy(message, "[server]: Have to login first!\n");
+
+        if (!is_logged_in)
+        {
+          ok = check_credentials(info_array[2], info_array[3]);
+          if (!ok)
+          {
+            strcpy(message, "[server]: Incorrect username or password!\n");
+          }
+          else 
+          {
+            strcpy(message, "[server]: Login successfully!\n");
+            clients[client_index].connfd = connfd;
+            strcpy(clients[client_index++].username, info_array[2]);
+            bytes_sent = send(connfd, message, BUFF_SIZE, 0);
+            if (bytes_sent < 0)
+              perror("\n[server]: ");
+            printf("%s\n\n", message);
+
+            // upload existing files
+            bytes_received = recv(connfd, buff, BUFF_SIZE, 0);
+            if (bytes_received < 0)
+              perror("\n[server]: ");
+
+            buff[bytes_received] = '\0';
+
+            int file_count;
+            char** files = extract_information(buff, &file_count);
+            for (int i = 0; i < file_count; i++)
+            {
+              bool ok = upload_file(files[i], info_array[2]);
+              if (!ok)
+              {
+                printf("[server]: File upload failed!\n");
+              }
+            }
+            printf("[server]: Files upload successfully!\n");
+            break;
+          }
+        }
+        
         bytes_sent = send(connfd, message, BUFF_SIZE, 0);
         if (bytes_sent < 0)
           perror("\n[server]: ");
         printf("%s\n\n", message);
-      }
-      break;
+        break;
+
+      case 3:
+      // int check;
+
+        for (int i = 0; i < client_index; i++)
+        {
+          if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
+          {
+            check = 1;
+
+            // Create a file update struct to pass to the file_update_handler thread
+            strcpy(clients[i].filename, info_array[3]);
+            strcpy(clients[i].method, info_array[1]);
+            if (count == 5)
+              strcpy(clients[i].old_filename, info_array[4]);
+
+            // Create a new thread to handle the file update
+            pthread_t file_update_tid;
+            pthread_create(&file_update_tid, NULL, file_upload_handler, &clients[i]);
+            break;
+          }
+        }
+        if (check == 0)
+        {
+          strcpy(message, "[server]: Have to login first!\n");
+          bytes_sent = send(connfd, message, BUFF_SIZE, 0);
+          if (bytes_sent < 0)
+            perror("\n[server]: ");
+          printf("%s\n\n", message);
+        }
+        break;
 
       case 4:
       
-      for (int i = 0; i < client_index; i++)
-      {
-        if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
+        for (int i = 0; i < client_index; i++)
         {
-          check = 1;
+          if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
+          {
+            check = 1;
 
-          delete_client(clients, client_index, i);
-          client_index--;
-          strcpy(message, "[server]: Logout successfully!\n");
-          break;
-        } 
-      }
-      if (check == 0)
-      {
-        strcpy(message, "[server]: Have to login first!\n");
-      }
+            delete_client(clients, client_index, i);
+            client_index--;
+            strcpy(message, "[server]: Logout successfully!\n");
+            break;
+          } 
+        }
+        if (check == 0)
+        {
+          strcpy(message, "[server]: Have to login first!\n");
+        }
 
-      bytes_sent = send(connfd, message, BUFF_SIZE, 0);
+        bytes_sent = send(connfd, message, BUFF_SIZE, 0);
+          if (bytes_sent < 0)
+            perror("\n[server]: ");
+          printf("%s\n\n", message);
+        break;
+      
+      case 5:
+        strcpy(reply_search, "reply search from server\n");
+        bytes_sent = send(connfd, reply_search, sizeof(reply_search), 0);
         if (bytes_sent < 0)
-          perror("\n[server]: ");
-        printf("%s\n\n", message);
-      break;
-    }
+            perror("\n[server]: ");
+          printf("%s\n\n", reply_search);
+        break;
+        
+      }
   }
- 
   close(connfd);
-  return NULL;
-}
+  // return NULL;
+  return  NULL;
+  }
 
 // Function to handle file updates
 void* file_upload_handler(void* arg) {

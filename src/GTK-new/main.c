@@ -1,5 +1,5 @@
 #include "main.h"
-#include "./handler/homepage.c"
+#include "handler/homepage.c"
 
 char* construct_string(const char** info_array, int size, const char* delimiter) {
     int total_length = 0;

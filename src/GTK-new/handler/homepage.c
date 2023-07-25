@@ -129,8 +129,34 @@ void on_logoutMenuButton_clicked(GtkButton *b){
 }
 //Search
 void on_downloadButton_clicked(GtkWidget *button) {
-        printf("button clicked");
-        test();
+        bool ok = handle_logout(home_inotify_args.client_sock, ":", home_inotify_args.username);
+        printf("Logout: %d\n", ok);
+        fflush(stdout);
+        if (ok){
+          printf("Logout successful!\n");
+          gtk_widget_hide(searchWindow);
+          gtk_widget_show(window);
+        }
+        else{
+          printf("Logout failed!\n"); 
+        }
+        // printf("hello world");
+        // fflush(stdout);
+
+        // const gchar *search_str = gtk_entry_get_text(GTK_ENTRY(searchEntry));
+        // char filename[SIZE];
+        // strcpy(filename, search_str);
+        // int server_fd = handle_download(home_inotify_args.ip, home_inotify_args.server_port, filename);
+        // if (server_fd){
+        //   printf("download successful!\n");
+        //   gtk_widget_hide(menuWindow);
+        //   gtk_widget_show(window);
+        // }
+        // else{
+        //   printf("download problem!\n");
+        // }
+        // close(server_fd);
+
 }
 void on_backSearchButton_clicked(GtkButton *b,int argc, char *argv[]){
         gtk_widget_hide(searchWindow);
@@ -143,15 +169,17 @@ typedef struct {
 } RowData;
 void on_searchButton_clicked(GtkWidget *button) {
     printf("hello world");
+    char username[SIZE];
+    int port;
     const gchar *search_str = gtk_entry_get_text(GTK_ENTRY(searchEntry));
-    printf("%d",search(search_str));
+    printf("%d",search(search_str, username, &port));
     gtk_combo_box_text_remove_all(comboBox);
 
     RowData array[10];
     for (int i = 0; i < 10; i++) {
         array[i].user = NULL;
         array[i].ip = NULL;
-        array[i].port = NULL;
+        array[i].port = port;
     }
     // Allocate memory and copy strings for array[0]
     array[0].user = strdup("John");

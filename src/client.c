@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <stdbool.h>
 
+
 #define BUFF_SIZE 8192
 #define SIZE 1024
 
@@ -64,10 +65,11 @@ char* get_input();
 bool handle_registration(int client_sock, const char* delimiter, char username[], char password[], char server_port[], char ip[]);
 bool handle_login(int client_sock, const char* delimiter, char* username, char* password, pthread_t inotify_tid, InotifyThreadArgs inotify_args);
 bool handle_logout(int client_sock, const char* delimiter, char username[]);
+int handle_search(int client_sock, const char* delimiter, char search_str[SIZE]);
 
 char path_to_be_watched[SIZE];
 char file_name_inserted[SIZE];
-char server_port[SIZE];
+char server_port_of_client[SIZE];
 
 bool handle_logout(int client_sock, const char* delimiter, char username[])
 {
@@ -128,6 +130,7 @@ bool handle_login(int client_sock, const char* delimiter, char* username, char* 
 
     int file_count = file_list(path_to_be_watched, list_of_files);
     char* message = construct_string((const char**)list_of_files, file_count, delimiter);
+    printf("\n inside login%s\n", message);
     int bytes_sent = send(client_sock, message, strlen(message), 0);
     if (bytes_sent < 0) {
       printf("\nError! Can not send data to server! Client exit immediately!\n");
@@ -182,7 +185,7 @@ int main(int argc, char* argv[]) {
     int msg_len, bytes_sent, bytes_received, bytes_read, total_bytes_sent, total_bytes_received;
     int port;
     const char* delimiter = ":";
-    char server_port[SIZE];
+    char port_working_with_server[SIZE];
     bool success;
 
     if (argc != 5) {
@@ -192,9 +195,10 @@ int main(int argc, char* argv[]) {
     else {
         strcpy(ip, argv[1]);
         port = atoi(argv[2]);
-        strcpy(server_port, argv[3]);
+        strcpy(server_port_of_client, argv[3]);
         strcpy(path_to_be_watched, argv[4]);
     }
+    printf("read in server port: %s\n", server_port_of_client);
 
     client_sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -227,7 +231,7 @@ int main(int argc, char* argv[]) {
         //
         switch (choice) {
             case 1:
-                success = handle_registration(client_sock, delimiter, username, password, server_port, ip);
+                success = handle_registration(client_sock, delimiter, username, password, port_working_with_server, ip);
                 break;
 
             case 2:
@@ -235,7 +239,7 @@ int main(int argc, char* argv[]) {
                 success = handle_login(client_sock, delimiter, username, password, inotify_tid, inotify_args);
                
                 if (success == true)
-        {
+                {
                 int server_fd;
                 while (1) {
                     int sub_choice;
@@ -246,14 +250,13 @@ int main(int argc, char* argv[]) {
                     getchar();
 
                     if (sub_choice == 1) {
-                        printf("chua xong ...\n");
-                        int f_num;
-                        char *list_of_file[100];
-                        f_num = file_list(path_to_be_watched, list_of_file);
-                        for (int i = 0; i < f_num ; i ++)
-                        {
-                          printf("\n%d: %s", i, list_of_file[i]);
-                        }
+                        printf("\nenter your search string: ");
+                        char search_str[SIZE/2];
+                        scanf("%s", search_str);
+                        getchar();
+                        printf("search str: %s - %ld\n", search_str, strlen(search_str));
+
+                        handle_search(client_sock, delimiter, search_str);
                         break;
                     }
                     else if (sub_choice == 2)
@@ -277,7 +280,7 @@ int main(int argc, char* argv[]) {
                         break;
                     }
                     close(server_fd);
-                }
+                    }
                 }
 
                 break;
@@ -286,6 +289,29 @@ int main(int argc, char* argv[]) {
 
     close(client_sock);
     return 0;
+}
+
+int handle_search(int client_sock, const char* delimiter,char search_msg[SIZE]){
+      char buff[BUFF_SIZE];
+      const char *search_array[3] = { "5", "search", search_msg};
+      int size = sizeof(search_array) / sizeof(search_array[0]);
+
+      char* constructed_str = construct_string(search_array, size, delimiter);
+      printf("constructed: %s\n", constructed_str);
+      int bytes_sent = send(client_sock, constructed_str, strlen(constructed_str), 0);
+        if (bytes_sent < 0) {
+          printf("\nError! Cannot send data to server! Client exits immediately!\n");
+          exit(1);
+        }
+        printf("after send");
+        int bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
+        if (bytes_received < 0) {
+          printf("\nError! Cannot receive data from server! Client exits immediately!\n");
+          exit(1);
+        }
+        buff[bytes_received] = '\0';
+        printf("%s\n", buff);
+        return 1;
 }
 
 int file_list(char path[SIZE], char* list_of_files[])
@@ -347,7 +373,7 @@ char* construct_string(const char** info_array, int size, const char* delimiter)
 }
 
 int handle_download(char ip[]){
-    int port = atoi(server_port);
+    int port = atoi(server_port_of_client);
     // printf("Enter your port number:");
     // scanf("%d", &port);
     
@@ -367,7 +393,7 @@ int handle_download(char ip[]){
 
     //Printed the server socket addr and port
     printf("IP address is: %s\n", inet_ntoa(address.sin_addr));
-    printf("port is: %d\n", (int)ntohs(address.sin_port));
+    printf("port is: %d\n", port);
 
     // bind address and listen
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
@@ -550,6 +576,7 @@ int search_for_file(char path[], char file_name[]){
         // }
         if(strcmp(entry->d_name, file_name) == 0){
             printf("found sth\n");
+            printf("%s", entry->d_name);
             return 1;
         }
     }

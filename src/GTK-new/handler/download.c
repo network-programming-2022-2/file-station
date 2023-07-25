@@ -13,6 +13,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <stdbool.h>
+#include "../main.h"
 
 #define BUFF_SIZE 8192
 #define SIZE 1024
@@ -22,25 +23,17 @@
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUF_LEN (MAX_EVENTS * (EVENT_SIZE + LEN_NAME))
 
-typedef struct InotifyThreadArgs {
-  char path_to_watch[SIZE];
-  int client_sock;
-  char username[SIZE];
-} InotifyThreadArgs;
-
 char path_to_be_watched[SIZE];
 char file_name_inserted[SIZE];
 char server_port[SIZE];
 
-void test(){
-  printf("from download.c");
-}
+int handle_download(char ip[], char server_port[SIZE], char filename[SIZE]){
 
-int handle_download(char ip[]){
     int port = atoi(server_port);
+    strcpy(file_name_inserted, filename);
     // printf("Enter your port number:");
     // scanf("%d", &port);
-    
+
     int server_fd, new_socket, valread;
     struct sockaddr_in address;
     
@@ -212,10 +205,11 @@ void sending(char ip[], int sender_port)
     }
 
     char dummy;
-    printf("Enter your file you want to download:");
-    scanf("%c", &dummy);
-    scanf("%[^\n]s", filename);
-    strcpy(file_name_inserted, filename);
+    // printf("Enter your file you want to download:");
+    // scanf("%c", &dummy);
+    // scanf("%[^\n]s", filename);
+    // strcpy(file_name_inserted, filename);
+    strcpy(filename, file_name_inserted);
     sprintf(buffer, "[PORT]:%d:%s", sender_port, filename);
     send(sock, buffer, sizeof(buffer), 0);
     printf("\nMessage sent\n");

@@ -25,6 +25,15 @@
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUF_LEN (MAX_EVENTS * (EVENT_SIZE + LEN_NAME))
 
+typedef struct {
+  int file_id;
+  char filename[100];
+  int downloaded_numbers;
+  char username[100];
+  char ip[100];
+  int port;
+} SearchResult;
+
 typedef struct InotifyThreadArgs {
   char path_to_watch[SIZE];
   int client_sock;
@@ -36,5 +45,6 @@ typedef struct InotifyThreadArgs {
 } InotifyThreadArgs;
 
 char* construct_string(const char** info_array, int size, const char* delimiter);
+char** extract_information(const char* str, int* count, const char* delimiter);
 
 #endif /* HOMEPAGE_HANDLER_H */

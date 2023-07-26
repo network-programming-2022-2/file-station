@@ -223,6 +223,7 @@ bool handle_search(int client_sock, const char* delimiter, char username[], char
 
   char* constructed_str = construct_string(search_array, size, delimiter);
 
+  printf("Send: %s\n", constructed_str);
   int bytes_sent = send(client_sock, constructed_str, strlen(constructed_str), 0);
   if (bytes_sent < 0) {
     printf("\nError! Cannot send data to server! Client exits immediately!\n");
@@ -235,8 +236,8 @@ bool handle_search(int client_sock, const char* delimiter, char username[], char
     exit(1);
   }
   buff[bytes_received] = '\0';
-  printf("%s\n", buff);
 
+  printf("Receive: %s\n", buff);
   if (strcmp(buff, "[server]: Search failed!\n") == 0)
   {
     return false;
@@ -248,10 +249,7 @@ bool handle_search(int client_sock, const char* delimiter, char username[], char
 
   for (int i = 0; i < received_count; i++)
   {
-    printf("%s\n", result_list[i]);
     char** fields = extract_information(result_list[i], &count, ":");
-    for (int j = 0; j < count; j++)
-      printf("\t%s\n", fields[j]);
 
     result[i].file_id = atoi(fields[0]);
     result[i].downloaded_numbers = atoi(fields[2]);

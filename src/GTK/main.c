@@ -82,3 +82,44 @@ int main(int argc, char *argv[]) {
     return 1;
 }
 
+char** extract_information(const char* str, int* count, const char* delimiter) 
+{
+  char* copy = (char*)malloc(strlen(str) + 1);
+  if (copy != NULL) 
+    strcpy(copy, str);
+
+  char* token = strtok(copy, delimiter); // Get the first token
+  *count = 0;
+
+  // Count the number of tokens
+  while (token != NULL) 
+  {
+    (*count)++;
+    token = strtok(NULL, delimiter); // Get the next token
+  }
+
+  // Allocate memory for the array of tokens
+  char** info_array = (char**)malloc((*count) * sizeof(char*));
+
+  // Reset the copy string and tokenize again to populate the array
+  strcpy(copy, str);
+  token = strtok(copy, delimiter); // Get the first token
+  int i = 0;
+
+  while (token != NULL) 
+  {
+    // Allocate memory for the current token
+    info_array[i] = (char*)malloc(strlen(token) + 1);
+    if (info_array[i] != NULL) {
+      strcpy(info_array[i], token);
+      token = strtok(NULL, delimiter); // Get the next token
+      i++;
+    }
+  }
+
+  free(copy); // Free the copied string
+
+  return info_array;
+}
+
+

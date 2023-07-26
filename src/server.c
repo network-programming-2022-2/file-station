@@ -340,6 +340,7 @@ void *login_handler(void *arg)
           {
             printf("Found %d results\n", num_results);
             char send_message[BUFF_SIZE]; // Allocate memory for 2D array of characters
+            memset(send_message, 0, BUFF_SIZE);
             int size;
 
             for (int i = 0; i < num_results; i++) // Loop through the search results
@@ -355,15 +356,16 @@ void *login_handler(void *arg)
               size = sizeof(msg) / sizeof(msg[0]);
               char* each_result_msg = construct_string(msg, size, ":");
 
-              printf("%s\n", each_result_msg);
               strcat(send_message, each_result_msg);
               if (i != num_results - 1)
                 strcat(send_message, "\\");
               free(each_result_msg); // Free the dynamically allocated string
             }
-            printf("%s\n", send_message);
 
+            printf("Send message: %s\n\n", send_message);
+            printf("Previous message: %s\n\n", message);
             strcpy(message, send_message);
+            printf("New message: %s\n\n", message);
           }
 
           break;

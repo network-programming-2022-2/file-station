@@ -3,6 +3,7 @@
 #include "register.c"
 #include "login.c"
 #include "logout.c"
+#include "search.c"
 
 InotifyThreadArgs home_inotify_args;
 
@@ -156,34 +157,38 @@ void on_searchButton_clicked(GtkWidget *button) {
     gtk_combo_box_text_remove_all(comboBox);
     gtk_label_set_text(GTK_LABEL(notifyLabel), "");
 
-    RowData array[10];
-    for (int i = 0; i < 10; i++) {
-        array[i].user = NULL;
-        array[i].ip = NULL;
-        array[i].port = NULL;
+    gchar *filename = gtk_entry_get_text(GTK_ENTRY(searchEntry));
+    printf("%s\n", filename);
+
+    SearchResult result[100];
+    int num_files;
+    bool success = handle_search(home_inotify_args.client_sock, ":", home_inotify_args.username, filename, result, &num_files);
+    if (success == true)
+    {
+      printf("searching ...\n");
+      printf("%d\n", num_files);
     }
-    // Allocate memory and copy strings for array[0]
-    array[0].user = strdup("John");
-    array[0].ip = strdup("1.1.1.1");
-    array[0].port = strdup("1234");
+    else 
+    {
+      printf("search failed...\n");
+    }
 
-    // Allocate memory and copy strings for array[1]
-    array[1].user = strdup("Jane");
-    array[1].ip = strdup("1.2.3.4");
-    array[1].port = strdup("2345");
+    RowData array[100];
+    char port_str[20];
+    for (int i = 0; i < num_files; i++) {
+        array[i].user = strdup(result[i].username);
+        array[i].ip = strdup(result[i].ip);
+        snprintf(port_str, sizeof(port_str), "%d", result[i].port);
+        array[i].port = strdup(port_str);
 
-    // Allocate memory and copy strings for array[2]
-    array[2].user = strdup("Bob");
-    array[2].ip = strdup("1.2.3.5");
-    array[2].port = strdup("2355");
+        printf("\n%s %s %s\n", array[i].user, array[i].ip, array[i].port);
+    }
 
     gtk_list_store_clear(list_store);
 
     GtkTreeIter iter;
-    int count;
-    for(int i=0; i<10; i++){
+    for(int i=0; i<num_files; i++){
         if(array[i].user==NULL){
-           count = i;
            break;
         } 
         gtk_list_store_append(list_store, &iter);
@@ -193,7 +198,7 @@ void on_searchButton_clicked(GtkWidget *button) {
     gtk_widget_queue_draw(GTK_WIDGET(list_store));
 
     //Init ComboBox
-    for (int i = 1; i <= count; i++) {
+    for (int i = 1; i <= num_files; i++) {
         char text[10];
         snprintf(text, sizeof(text), "%d", i);
         gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboBox), text);

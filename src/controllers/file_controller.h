@@ -15,6 +15,9 @@ bool delete_file(const char* filename, const char* username);
 // Function to update file name
 bool update_file_name(const char* old_filename, const char* filename, const char* username);
 
+// Function to search files
+bool search_files(const char* filename, SearchResult result[], int *num_files);
+
 // // Function to check if a file exists
 // bool does_file_exist(const char* filename);
 

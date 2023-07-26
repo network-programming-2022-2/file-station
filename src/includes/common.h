@@ -35,10 +35,10 @@ typedef struct {
 
 typedef struct {
   int file_id;
-  char* filename;
+  char filename[100];
   int downloaded_numbers;
-  char* username;
-  char* ip;
+  char username[100];
+  char ip[100];
   int port;
 } SearchResult;
 

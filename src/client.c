@@ -22,6 +22,15 @@
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUF_LEN (MAX_EVENTS * (EVENT_SIZE + LEN_NAME))
 
+typedef struct {
+  int file_id;
+  char filename[100];
+  int downloaded_numbers;
+  char username[100];
+  char ip[100];
+  int port;
+} SearchResult;
+
 typedef struct InotifyThreadArgs {
   char path_to_watch[SIZE];
   int client_sock;
@@ -64,7 +73,7 @@ char* get_input();
 bool handle_registration(int client_sock, const char* delimiter, char username[], char password[], char server_port[], char ip[]);
 bool handle_login(int client_sock, const char* delimiter, char* username, char* password, pthread_t inotify_tid, InotifyThreadArgs inotify_args);
 bool handle_logout(int client_sock, const char* delimiter, char username[]);
-bool handle_search(int client_sock, const char* delimiter, char username[], char filename[], SearchResult* result[])
+bool handle_search(int client_sock, const char* delimiter, char username[], char filename[], SearchResult* result, int* num_files);
 
 char path_to_be_watched[SIZE];
 char file_name_inserted[SIZE];
@@ -206,10 +215,10 @@ bool handle_registration(int client_sock, const char* delimiter, char username[]
   return true;
 }
 
-bool handle_search(int client_sock, const char* delimiter, char username[], char filename[], SearchResult* result[])
+bool handle_search(int client_sock, const char* delimiter, char username[], char filename[], SearchResult* result, int* num_files)
 {
   char buff[BUFF_SIZE];
-  const char *search_array[3] = { "5", "search", username, filename };
+  const char *search_array[4] = { "5", "search", username, filename };
   int size = sizeof(search_array) / sizeof(search_array[0]);
 
   char* constructed_str = construct_string(search_array, size, delimiter);
@@ -226,18 +235,37 @@ bool handle_search(int client_sock, const char* delimiter, char username[], char
     exit(1);
   }
   buff[bytes_received] = '\0';
+  printf("%s\n", buff);
 
   if (strcmp(buff, "[server]: Search failed!\n") == 0)
   {
     return false;
   }
 
-  char** result_list = extract_information(buff, &count, "\\");
+  int received_count, count;
+  char** result_list = extract_information(buff, &received_count, "\\");
+  *num_files = received_count;
 
-  for (int i = 0; i < count; i++)
+  for (int i = 0; i < received_count; i++)
   {
+    printf("%s\n", result_list[i]);
     char** fields = extract_information(result_list[i], &count, ":");
-    result[i] = { fields[0], fields[1], fields[2], fields[3], fields[4], fields[5] };
+    for (int j = 0; j < count; j++)
+      printf("\t%s\n", fields[j]);
+
+    result[i].file_id = atoi(fields[0]);
+    result[i].downloaded_numbers = atoi(fields[2]);
+    result[i].port = atoi(fields[5]);
+    strcpy(result[i].filename, fields[1]);
+    strcpy(result[i].username, fields[3]);
+    strcpy(result[i].ip, fields[4]);  
+
+    printf("User: %s\n", result[i].username);
+    printf("IP: %s\n", result[i].ip);
+    printf("Port: %d\n", result[i].port);
+    printf("File ID: %d\n", result[i].file_id);
+    printf("File name: %s\n", result[i].filename);
+    printf("Downloaded numbers: %d\n", result[i].downloaded_numbers);
   }
 
   return true;
@@ -324,12 +352,15 @@ int main(int argc, char* argv[]) {
                     getchar();
 
                     if (sub_choice == 1) {
-                        SearchResult result[SIZE];
-                        success = handle_search(client_sock, delimiter, username, filename, &result);
+                        char filename[SIZE];
+                        strcpy(filename, "hello.txt");
+                        SearchResult result[100];
+                        int num_files;
+                        success = handle_search(client_sock, delimiter, username, filename, result, &num_files);
                         if (success == true)
                         {
                           printf("searching ...\n");
-                          printf("%s", result.filename);
+                          printf("%d\n", num_files);
                         }
                         else {
                           printf("search failed...\n");

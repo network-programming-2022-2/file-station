@@ -11,7 +11,9 @@ GtkWidget *fixed;
 GtkWidget *registerButton;
 GtkWidget *loginButton;
 GtkWidget *appNameLabel;
-GtkBuilder *menuBuilder; 
+GtkWidget *notifyHomePageLabel;
+
+GtkBuilder *homepageBuilder; 
 //Register
 GtkWidget *registerWindow;
 GtkWidget *registerFixed;
@@ -22,6 +24,8 @@ GtkWidget *usernameRegisterEntry;
 GtkWidget *passwordRegisterEntry;
 GtkWidget *submitRegisterButton;
 GtkWidget *backRegisterButton;
+GtkWidget *notifyRegisterLabel;
+
 GtkBuilder *builderRegister; 
 //Login
 GtkWidget *loginWindow;
@@ -33,6 +37,8 @@ GtkWidget *usernameLoginEntry;
 GtkWidget *passwordLoginEntry;
 GtkWidget *submitLoginButton;
 GtkWidget *backLoginButton;
+GtkWidget *notifyLoginLabel;
+
 GtkBuilder *builderLogin; 
 //Menu
 GtkWidget *menuWindow;
@@ -59,10 +65,15 @@ GtkWidget *notifyLabel;
 void on_registerButton_clicked(GtkButton *b){
         gtk_widget_hide(window);
         gtk_widget_show(registerWindow);
+        gtk_label_set_text(GTK_LABEL(notifyRegisterLabel), "");
+
 }
 void on_loginButton_clicked(GtkButton *b,int argc, char *argv[]){
         gtk_widget_hide(window);
         gtk_widget_show(loginWindow);
+        gtk_label_set_text(GTK_LABEL(notifyLoginLabel), "");
+
+        
        
 }
 /// REGISTER
@@ -80,7 +91,7 @@ void on_submitRegisterButton_clicked(GtkButton *b){
           gtk_widget_show(window);
         }
         else{
-          printf("Registration failed!\n"); 
+          gtk_label_set_text(GTK_LABEL(notifyRegisterLabel), "Register failed! Try again");
         }
 }
 void on_backRegisterButton_clicked(GtkButton *b,int argc, char *argv[]){
@@ -101,7 +112,7 @@ void on_submitLoginButton_clicked(GtkButton *b){
           gtk_widget_show(menuWindow);
         }
         else{
-          printf("Login failed!\n"); 
+          gtk_label_set_text(GTK_LABEL(notifyLoginLabel), "Login failed! Try again");
         }
 }
 void on_backLoginButton_clicked(GtkButton *b,int argc, char *argv[]){
@@ -199,14 +210,15 @@ GtkWidget* createHomePageView(InotifyThreadArgs inotify_args){
         strcpy(home_inotify_args.ip, inotify_args.ip);
 
 //Build homepage
-        menuBuilder = gtk_builder_new_from_file("xml/homepage.glade");
-        window = GTK_WIDGET(gtk_builder_get_object(menuBuilder, "window"));
+        homepageBuilder = gtk_builder_new_from_file("xml/homepage.glade");
+        window = GTK_WIDGET(gtk_builder_get_object(homepageBuilder, "window"));
         g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-        fixed = GTK_WIDGET(gtk_builder_get_object(menuBuilder, "fixed"));
-        registerButton = GTK_WIDGET(gtk_builder_get_object(menuBuilder, "registerButton"));
-        loginButton = GTK_WIDGET(gtk_builder_get_object(menuBuilder, "loginButton"));
-        appNameLabel = GTK_WIDGET(gtk_builder_get_object(menuBuilder, "appNameLabel"));
+        fixed = GTK_WIDGET(gtk_builder_get_object(homepageBuilder, "fixed"));
+        registerButton = GTK_WIDGET(gtk_builder_get_object(homepageBuilder, "registerButton"));
+        loginButton = GTK_WIDGET(gtk_builder_get_object(homepageBuilder, "loginButton"));
+        appNameLabel = GTK_WIDGET(gtk_builder_get_object(homepageBuilder, "appNameLabel"));
+        notifyHomePageLabel = GTK_WIDGET(gtk_builder_get_object(homepageBuilder, "notifyHomePageLabel"));
         g_signal_connect(registerButton, "clicked", G_CALLBACK(on_registerButton_clicked), NULL);
         g_signal_connect(loginButton, "clicked", G_CALLBACK(on_loginButton_clicked), NULL);
 
@@ -223,6 +235,7 @@ GtkWidget* createHomePageView(InotifyThreadArgs inotify_args){
         passwordRegisterEntry = GTK_WIDGET(gtk_builder_get_object(builderRegister, "passwordEntry"));
         submitRegisterButton = GTK_WIDGET(gtk_builder_get_object(builderRegister, "submitButton"));
         backRegisterButton = GTK_WIDGET(gtk_builder_get_object(builderRegister, "backButton"));
+        notifyRegisterLabel = GTK_WIDGET(gtk_builder_get_object(builderRegister, "notifyRegisterLabel"));
         g_signal_connect(submitRegisterButton, "clicked", G_CALLBACK(on_submitRegisterButton_clicked), NULL);
         g_signal_connect(backRegisterButton, "clicked", G_CALLBACK(on_backRegisterButton_clicked), NULL);
 //Build Login
@@ -238,6 +251,8 @@ GtkWidget* createHomePageView(InotifyThreadArgs inotify_args){
         passwordLoginEntry = GTK_WIDGET(gtk_builder_get_object(builderLogin, "passwordEntry"));
         submitLoginButton = GTK_WIDGET(gtk_builder_get_object(builderLogin, "submitLoginButton"));
         backLoginButton = GTK_WIDGET(gtk_builder_get_object(builderLogin, "backButton"));
+        notifyLoginLabel = GTK_WIDGET(gtk_builder_get_object(builderLogin, "notifyLoginLabel"));
+
         g_signal_connect(submitLoginButton, "clicked", G_CALLBACK(on_submitLoginButton_clicked), NULL);
         g_signal_connect(backLoginButton, "clicked", G_CALLBACK(on_backLoginButton_clicked), NULL);
 

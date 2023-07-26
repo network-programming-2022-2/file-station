@@ -61,7 +61,13 @@ GtkWidget *backSearchButton;
 GtkWidget *downloadButton;
 GtkListStore *list_store;
 GtkWidget *notifyLabel;
+typedef struct {
+    char *user;
+    char *ip;
+    char *port;
+} RowData;
 
+RowData array[100];
 
 void on_registerButton_clicked(GtkButton *b){
         gtk_widget_hide(window);
@@ -146,16 +152,20 @@ void on_logoutMenuButton_clicked(GtkButton *b){
 void on_downloadButton_clicked(GtkWidget *button) {
         gtk_label_set_text(GTK_LABEL(notifyLabel), "Download Successfully!");
 
+        gchar *downloadIndex = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(comboBox));
+        RowData downloadData;
+        downloadData.ip = array[g_ascii_digit_value(*downloadIndex)-1].ip;
+        downloadData.port = array[g_ascii_digit_value(*downloadIndex)-1].port;
+        downloadData.user = array[g_ascii_digit_value(*downloadIndex)-1].user;
+
+        printf(" %s, %s, %s", downloadData.ip, downloadData.port, downloadData.user);
+        fflush(stdout);
 }
 void on_backSearchButton_clicked(GtkButton *b,int argc, char *argv[]){
         gtk_widget_hide(searchWindow);
         gtk_widget_show(menuWindow);
 }
-typedef struct {
-    char *user;
-    char *ip;
-    char *port;
-} RowData;
+
 void on_searchButton_clicked(GtkWidget *button) {
     gtk_combo_box_text_remove_all(comboBox);
     gtk_label_set_text(GTK_LABEL(notifyLabel), "");
@@ -176,7 +186,6 @@ void on_searchButton_clicked(GtkWidget *button) {
       printf("search failed...\n");
     }
 
-    RowData array[100];
     char port_str[20];
     for (int i = 0; i < num_files; i++) {
         array[i].user = strdup(result[i].username);

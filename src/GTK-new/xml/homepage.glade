@@ -64,6 +64,21 @@
             <property name="y">47</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkLabel" id="notifyHomepageLabel">
+            <property name="width-request">195</property>
+            <property name="height-request">32</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <attributes>
+              <attribute name="font-desc" value="Adelle Sans Devanagari Semi-Bold 13"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="x">441</property>
+            <property name="y">284</property>
+          </packing>
+        </child>
       </object>
     </child>
   </object>

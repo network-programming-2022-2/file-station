@@ -83,7 +83,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="submitButton">
+          <object class="GtkButton" id="submitLoginButton">
             <property name="label" translatable="yes">Submit</property>
             <property name="width-request">100</property>
             <property name="height-request">34</property>

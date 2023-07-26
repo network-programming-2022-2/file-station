@@ -28,8 +28,8 @@
             <property name="yalign">0.5</property>
           </object>
           <packing>
-            <property name="x">540</property>
-            <property name="y">138</property>
+            <property name="x">459</property>
+            <property name="y">151</property>
           </packing>
         </child>
         <child>
@@ -42,8 +42,8 @@
             <property name="receives-default">True</property>
           </object>
           <packing>
-            <property name="x">542</property>
-            <property name="y">197</property>
+            <property name="x">461</property>
+            <property name="y">202</property>
           </packing>
         </child>
         <child>
@@ -55,10 +55,13 @@
             <property name="label" translatable="yes">P2P PROGRAM</property>
             <property name="xalign">0.5</property>
             <property name="yalign">0.5</property>
+            <attributes>
+              <attribute name="font-desc" value="Adelle Sans Devanagari Bold 20"/>
+            </attributes>
           </object>
           <packing>
-            <property name="x">500</property>
-            <property name="y">40</property>
+            <property name="x">418</property>
+            <property name="y">47</property>
           </packing>
         </child>
       </object>

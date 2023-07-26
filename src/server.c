@@ -16,7 +16,7 @@
 #define BUFF_SIZE 1024
 #define MAX_CLIENTS 100
 
-typedef struct {
+typedef struct Client {
   int connfd;
   char username[50];
   char filename[BUFF_SIZE];
@@ -117,6 +117,34 @@ void delete_client(Client arr[], int size, int index)
   {
     arr[i] = arr[i + 1];
   }
+}
+
+char* construct_string(const char** info_array, int size, const char* delimiter) {
+    int total_length = 0;
+
+    // Calculate the total length of the constructed string
+    for (int i = 0; i < size; i++) {
+        total_length += strlen(info_array[i]);
+    }
+
+    // Add space for delimiters and null terminator
+    total_length += (size - 1) * strlen(delimiter) + 1;
+
+    // Allocate memory for the constructed string
+    char* constructed_string = (char*)malloc(total_length * sizeof(char));
+    constructed_string[0] = '\0'; // Initialize as an empty string
+
+    // Construct the string by joining elements with the delimiter
+    for (int i = 0; i < size; i++) {
+        strcat(constructed_string, info_array[i]);
+
+        // Append delimiter if it's not the last element
+        if (i < size - 1) {
+            strcat(constructed_string, delimiter);
+        }
+    }
+
+    return constructed_string;
 }
 
 void *login_handler(void *arg)
@@ -235,7 +263,7 @@ void *login_handler(void *arg)
 
       case 3:
       // int check;
-
+      check = 0;
       for (int i = 0; i < client_index; i++)
       {
         if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
@@ -265,7 +293,7 @@ void *login_handler(void *arg)
       break;
 
       case 4:
-      
+      check = 0;
       for (int i = 0; i < client_index; i++)
       {
         if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
@@ -288,6 +316,71 @@ void *login_handler(void *arg)
           perror("\n[server]: ");
         printf("%s\n\n", message);
       break;
+
+      case 5:
+      check = 0;
+      for (int i = 0; i < client_index; i++)
+      {
+        if (strcmp(clients[i].username, info_array[2]) == 0 && clients[i].connfd == connfd)
+        {
+          check = 1;
+          printf("Assign memory to search results\n");
+          SearchResult result[100];
+
+          printf("Search for %s\n", info_array[3]);
+          int num_results;
+          ok = search_files(info_array[3], result, &num_results);
+
+          if (!ok)
+          {
+            printf("Search failed\n");
+            strcpy(message, "[server]: File not found!\n");
+          }
+          else
+          {
+            printf("Found %d results\n", num_results);
+            char send_message[BUFF_SIZE]; // Allocate memory for 2D array of characters
+            int size;
+
+            for (int i = 0; i < num_results; i++) // Loop through the search results
+            {
+              // Convert integer fields to strings
+              char file_id_str[20], downloaded_numbers_str[20], port_str[20];
+              snprintf(file_id_str, sizeof(file_id_str), "%d", result[i].file_id);
+              snprintf(downloaded_numbers_str, sizeof(downloaded_numbers_str), "%d", result[i].downloaded_numbers);
+              snprintf(port_str, sizeof(port_str), "%d", result[i].port);
+
+              // Construct the message for each search result
+              const char *msg[6] = { file_id_str, result[i].filename, downloaded_numbers_str, result[i].username, result[i].ip, port_str };
+              size = sizeof(msg) / sizeof(msg[0]);
+              char* each_result_msg = construct_string(msg, size, ":");
+
+              printf("%s\n", each_result_msg);
+              strcat(send_message, each_result_msg);
+              if (i != num_results - 1)
+                strcat(send_message, "\\");
+              free(each_result_msg); // Free the dynamically allocated string
+            }
+            printf("%s\n", send_message);
+
+            strcpy(message, send_message);
+          }
+
+          break;
+        }
+      }      
+
+      if (check == 0)
+      {
+        strcpy(message, "[server]: Have to login first!\n");
+      }
+
+      bytes_sent = send(connfd, message, BUFF_SIZE, 0);
+        if (bytes_sent < 0)
+          perror("\n[server]: ");
+        printf("%s\n\n", message);
+      break;
+
     }
   }
  

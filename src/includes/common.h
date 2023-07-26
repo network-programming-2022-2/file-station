@@ -34,6 +34,15 @@ typedef struct {
 } FileResult;
 
 typedef struct {
+  int file_id;
+  char filename[100];
+  int downloaded_numbers;
+  char username[100];
+  char ip[100];
+  int port;
+} SearchResult;
+
+typedef struct {
     int user_id;
     char* username;
     char* password;

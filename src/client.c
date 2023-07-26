@@ -22,6 +22,15 @@
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUF_LEN (MAX_EVENTS * (EVENT_SIZE + LEN_NAME))
 
+typedef struct {
+  int file_id;
+  char filename[100];
+  int downloaded_numbers;
+  char username[100];
+  char ip[100];
+  int port;
+} SearchResult;
+
 typedef struct InotifyThreadArgs {
   char path_to_watch[SIZE];
   int client_sock;
@@ -64,10 +73,51 @@ char* get_input();
 bool handle_registration(int client_sock, const char* delimiter, char username[], char password[], char server_port[], char ip[]);
 bool handle_login(int client_sock, const char* delimiter, char* username, char* password, pthread_t inotify_tid, InotifyThreadArgs inotify_args);
 bool handle_logout(int client_sock, const char* delimiter, char username[]);
+bool handle_search(int client_sock, const char* delimiter, char username[], char filename[], SearchResult* result, int* num_files);
 
 char path_to_be_watched[SIZE];
 char file_name_inserted[SIZE];
 char server_port[SIZE];
+
+char** extract_information(const char* str, int* count, const char* delimiter) 
+{
+  char* copy = (char*)malloc(strlen(str) + 1);
+  if (copy != NULL) 
+    strcpy(copy, str);
+
+  char* token = strtok(copy, delimiter); // Get the first token
+  *count = 0;
+
+  // Count the number of tokens
+  while (token != NULL) 
+  {
+    (*count)++;
+    token = strtok(NULL, delimiter); // Get the next token
+  }
+
+  // Allocate memory for the array of tokens
+  char** info_array = (char**)malloc((*count) * sizeof(char*));
+
+  // Reset the copy string and tokenize again to populate the array
+  strcpy(copy, str);
+  token = strtok(copy, delimiter); // Get the first token
+  int i = 0;
+
+  while (token != NULL) 
+  {
+    // Allocate memory for the current token
+    info_array[i] = (char*)malloc(strlen(token) + 1);
+    if (info_array[i] != NULL) {
+      strcpy(info_array[i], token);
+      token = strtok(NULL, delimiter); // Get the next token
+      i++;
+    }
+  }
+
+  free(copy); // Free the copied string
+
+  return info_array;
+}
 
 bool handle_logout(int client_sock, const char* delimiter, char username[])
 {
@@ -165,6 +215,62 @@ bool handle_registration(int client_sock, const char* delimiter, char username[]
   return true;
 }
 
+bool handle_search(int client_sock, const char* delimiter, char username[], char filename[], SearchResult* result, int* num_files)
+{
+  char buff[BUFF_SIZE];
+  const char *search_array[4] = { "5", "search", username, filename };
+  int size = sizeof(search_array) / sizeof(search_array[0]);
+
+  char* constructed_str = construct_string(search_array, size, delimiter);
+
+  int bytes_sent = send(client_sock, constructed_str, strlen(constructed_str), 0);
+  if (bytes_sent < 0) {
+    printf("\nError! Cannot send data to server! Client exits immediately!\n");
+    exit(1);
+  }
+
+  int bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
+  if (bytes_received < 0) {
+    printf("\nError! Cannot receive data from server! Client exits immediately!\n");
+    exit(1);
+  }
+  buff[bytes_received] = '\0';
+  printf("%s\n", buff);
+
+  if (strcmp(buff, "[server]: Search failed!\n") == 0)
+  {
+    return false;
+  }
+
+  int received_count, count;
+  char** result_list = extract_information(buff, &received_count, "\\");
+  *num_files = received_count;
+
+  for (int i = 0; i < received_count; i++)
+  {
+    printf("%s\n", result_list[i]);
+    char** fields = extract_information(result_list[i], &count, ":");
+    for (int j = 0; j < count; j++)
+      printf("\t%s\n", fields[j]);
+
+    result[i].file_id = atoi(fields[0]);
+    result[i].downloaded_numbers = atoi(fields[2]);
+    result[i].port = atoi(fields[5]);
+    strcpy(result[i].filename, fields[1]);
+    strcpy(result[i].username, fields[3]);
+    strcpy(result[i].ip, fields[4]);  
+
+    printf("User: %s\n", result[i].username);
+    printf("IP: %s\n", result[i].ip);
+    printf("Port: %d\n", result[i].port);
+    printf("File ID: %d\n", result[i].file_id);
+    printf("File name: %s\n", result[i].filename);
+    printf("Downloaded numbers: %d\n", result[i].downloaded_numbers);
+  }
+
+  return true;
+}
+
 char* get_input() {
     char* input = (char*)malloc(SIZE);
     scanf("%s", input);
@@ -246,13 +352,18 @@ int main(int argc, char* argv[]) {
                     getchar();
 
                     if (sub_choice == 1) {
-                        printf("chua xong ...\n");
-                        int f_num;
-                        char *list_of_file[100];
-                        f_num = file_list(path_to_be_watched, list_of_file);
-                        for (int i = 0; i < f_num ; i ++)
+                        char filename[SIZE];
+                        strcpy(filename, "hello.txt");
+                        SearchResult result[100];
+                        int num_files;
+                        success = handle_search(client_sock, delimiter, username, filename, result, &num_files);
+                        if (success == true)
                         {
-                          printf("\n%d: %s", i, list_of_file[i]);
+                          printf("searching ...\n");
+                          printf("%d\n", num_files);
+                        }
+                        else {
+                          printf("search failed...\n");
                         }
                         break;
                     }

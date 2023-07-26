@@ -224,7 +224,7 @@ bool handle_login(const char* delimiter, const char* password, InotifyThreadArgs
     pthread_create(&inotify_args.inotify_tid, NULL, inotify_thread, &inotify_args);
     sleep(2); // Wait for 2 seconds
     int peer_port = atoi(inotify_args.server_port);
-    // *peer_server_fd = handle_download(inotify_args.ip, peer_port);
+    *peer_server_fd = handle_download(inotify_args.ip, peer_port, inotify_args.path_to_watch);
     return true;
   }
   return false;

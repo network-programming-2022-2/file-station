@@ -150,17 +150,24 @@ void on_logoutMenuButton_clicked(GtkButton *b){
 }
 //Search
 void on_downloadButton_clicked(GtkWidget *button) {
-        gtk_label_set_text(GTK_LABEL(notifyLabel), "Download Successfully!");
-
         gchar *downloadIndex = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(comboBox));
+        if(downloadIndex==NULL){
+                return;
+        }
         RowData downloadData;
         downloadData.ip = array[g_ascii_digit_value(*downloadIndex)-1].ip;
         downloadData.port = array[g_ascii_digit_value(*downloadIndex)-1].port;
         downloadData.user = array[g_ascii_digit_value(*downloadIndex)-1].user;
+        char filename[SIZE] = "hello.txt";
 
         printf(" %s, %s, %s", downloadData.ip, downloadData.port, downloadData.user);
+
+        sending(downloadData.ip, atoi(home_inotify_args.server_port), atoi(downloadData.port), filename);
+        
         fflush(stdout);
+        gtk_label_set_text(GTK_LABEL(notifyLabel), "Download Successfully!");
 }
+
 void on_backSearchButton_clicked(GtkButton *b,int argc, char *argv[]){
         gtk_widget_hide(searchWindow);
         gtk_widget_show(menuWindow);

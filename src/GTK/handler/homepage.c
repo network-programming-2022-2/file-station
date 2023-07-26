@@ -106,9 +106,11 @@ void on_submitLoginButton_clicked(GtkButton *b){
         gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameLoginEntry));
         gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordLoginEntry));
         strcpy(home_inotify_args.username, username);
-        bool ok = handle_login(":", password, home_inotify_args);
+        int peer_server_fd;
+        bool ok = handle_login(":", password, home_inotify_args, &peer_server_fd);
         fflush(stdout);
         if (ok){
+          home_inotify_args.peer_server_fd = peer_server_fd;
           gtk_widget_hide(loginWindow);
           gtk_widget_show(menuWindow);
         }
@@ -131,6 +133,7 @@ void on_logoutMenuButton_clicked(GtkButton *b){
         printf("Logout: %d\n", ok);
         fflush(stdout);
         if (ok){
+          close(home_inotify_args.peer_server_fd);
           printf("Logout successful!\n");
           gtk_widget_hide(menuWindow);
           gtk_widget_show(window);

@@ -1,4 +1,5 @@
 #include "../main.h"
+#include "download.c"
 
 void* inotify_thread(void* arg) {
     InotifyThreadArgs* args = (InotifyThreadArgs*)arg;
@@ -181,7 +182,7 @@ int file_list(char path[SIZE], char* list_of_files[])
   return file_count;
 }
 
-bool handle_login(const char* delimiter, const char* password, InotifyThreadArgs inotify_args) 
+bool handle_login(const char* delimiter, const char* password, InotifyThreadArgs inotify_args, int* peer_server_fd) 
 {
   const char *login_array[4] = { "2", "login", inotify_args.username, password };
   int size = sizeof(login_array) / sizeof(login_array[0]);
@@ -222,6 +223,8 @@ bool handle_login(const char* delimiter, const char* password, InotifyThreadArgs
                   
     pthread_create(&inotify_args.inotify_tid, NULL, inotify_thread, &inotify_args);
     sleep(2); // Wait for 2 seconds
+    int peer_port = atoi(inotify_args.server_port);
+    *peer_server_fd = handle_download(inotify_args.ip, peer_port);
     return true;
   }
   return false;

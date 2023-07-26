@@ -42,6 +42,7 @@ typedef struct InotifyThreadArgs {
   int port;
   char server_port[SIZE];
   char ip[SIZE];
+  int peer_server_fd;
 } InotifyThreadArgs;
 
 char* construct_string(const char** info_array, int size, const char* delimiter);

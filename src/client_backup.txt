@@ -12,7 +12,6 @@
 #include <sys/select.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <openssl/sha.h>
 
 #define BUFF_SIZE 8192
 #define SIZE 1024
@@ -52,7 +51,7 @@ char *construct_string(const char **info_array, int size, const char *delimiter)
 int handle_download(char ip[INET_ADDRSTRLEN], int port);
 void *receive_thread(void *server_fd);
 char *receiving(int server_fd);
-void sending(char ip[INET_ADDRSTRLEN], int sender_port, int des_port, char filename[SIZE/2]);
+void sending(char ip[INET_ADDRSTRLEN], int sender_port);
 int file_list(char path[SIZE], char *list_of_files[]);
 int search_for_file(char path[SIZE], char file_name[SIZE]);
 void handle_req_string(char bufff[SIZE], int *des_port, char filename[SIZE]);
@@ -383,18 +382,7 @@ int main(int argc, char *argv[])
                         printf("download ...\n");
                         // int port1 = atoi(server_port);
                         // server_fd = handle_download(ip, port1);
-                        int port2;
-                        char filename[SIZE / 2] = {0};
-
-                        printf("Enter the port to send message:");
-                        scanf("%d", &port2);
-                        // getchar();
-                        char dummy;
-                        printf("Enter your file you want to download:");
-                        scanf("%c", &dummy);
-                        
-                        scanf("%[^\n]s", filename);
-                        sending(ip, port1, port2, filename);
+                        sending(ip, port1);
                         continue;
                     }
                     else
@@ -543,7 +531,7 @@ void *receive_thread(void *server_fd)
     int s_fd = *((int *)server_fd);
     while (1)
     {
-        sleep(2);
+        // sleep(2);
         receiving(s_fd);
     }
 }
@@ -644,18 +632,18 @@ char *receiving(int server_fd)
 }
 
 // Sending messages to port
-void sending(char ip[], int sender_port, int des_port, char filename[])
+void sending(char ip[], int sender_port)
 {
     char buffer[SIZE] = {0};
     // Fetching port number
-    int PORT_server = des_port;
+    int PORT_server;
 
-    // printf("Enter the port to send message:");
-    // scanf("%d", &PORT_server);
+    printf("Enter the port to send message:");
+    scanf("%d", &PORT_server);
 
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
-    // char filename[SIZE / 2] = {0};
+    char filename[SIZE / 2] = {0};
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("\n Socket creation error \n");
@@ -672,10 +660,10 @@ void sending(char ip[], int sender_port, int des_port, char filename[])
         return;
     }
 
-    // char dummy;
-    // printf("Enter your file you want to download:");
-    // scanf("%c", &dummy);
-    // scanf("%[^\n]s", filename);
+    char dummy;
+    printf("Enter your file you want to download:");
+    scanf("%c", &dummy);
+    scanf("%[^\n]s", filename);
     strcpy(file_name_inserted, filename);
     sprintf(buffer, "[PORT]:%d:%s", sender_port, filename);
     send(sock, buffer, sizeof(buffer), 0);
@@ -815,7 +803,7 @@ void send_file(char ip[], int des_port, char filename[SIZE])
         }
     }
     fclose(src_file);
-    printf("Done read file\n");
+    printf("done read file\n");
     return;
 }
 
@@ -850,13 +838,12 @@ void receive_file(int src_sockfd, char filename[], long file_size)
     char finished_download[SIZE];
     strcpy(finished_download, "Download completed");
 
-    printf("\n%s", finished_download);
-    // int bytes_sent = send(src_sockfd, finished_download, sizeof(finished_download), 0);
-    // if (bytes_sent < 0)
-    // {
-    //     perror("connection close");
-    //     exit(0);
-    // }
+    int bytes_sent = send(src_sockfd, finished_download, sizeof(finished_download), 0);
+    if (bytes_sent < 0)
+    {
+        perror("connection close");
+        exit(0);
+    }
 
     fclose(write_to_this_path);
     // close(src_sockfd); // can be unchecked

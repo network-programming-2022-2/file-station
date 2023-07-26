@@ -41,11 +41,11 @@ all: $(SERVER_TARGET) $(CLIENT_TARGET)
 
 $(SERVER_TARGET): $(SERVER_OBJS) $(POSTGRESQL_OBJS) $(FILE_OBJS) $(USER_OBJS) $(USER_CONTROLLER_OBJS) $(FILE_CONTROLLER_OBJS)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -pthread
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -pthread -lssl -lcrypto
 
 $(CLIENT_TARGET): $(CLIENT_OBJS)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -pthread
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -pthread -lssl -lcrypto
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(dir $@)

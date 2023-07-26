@@ -74,7 +74,11 @@ int main(int argc, char *argv[]) {
     printf("server_port: %s\n", inotify_args.server_port);
     printf("ip: %s\n", inotify_args.ip);    
 
-    int a = createHomePageView(inotify_args);
+    gtk_init(NULL, NULL);
+
+    createHomePageView(inotify_args);
+    gtk_widget_show(window);
+    gtk_main();
     return 1;
 }
 

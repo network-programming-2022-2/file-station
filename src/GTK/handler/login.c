@@ -1,5 +1,3 @@
-#include<gtk/gtk.h>
-#include"menu.c"
 #include "../main.h"
 
 void* inotify_thread(void* arg) {
@@ -158,17 +156,27 @@ int file_list(char path[SIZE], char* list_of_files[])
 
   while ((entry = readdir(dir)) != NULL)
   {
-    stat(entry->d_name,&filestat);
-    if( S_ISDIR(filestat.st_mode) )
+    char full_path[SIZE];
+    snprintf(full_path, SIZE, "%s/%s", path, entry->d_name);
+
+    if (stat(full_path, &filestat) == -1)
     {
-      printf("%4s: %s\n","Dir",entry->d_name);
+      printf("Error getting file/directory information: %s\n", full_path);
       continue;
     }
 
-    printf("%4s: %s\n","File",entry->d_name);
+    if (S_ISDIR(filestat.st_mode))
+    {
+      printf("%4s: %s\n", "Dir", full_path);
+      continue;
+    }
+
+    printf("%4s: %s\n", "File", full_path);
+
     list_of_files[file_count] = malloc(strlen(entry->d_name) + 1);
     strcpy(list_of_files[file_count++], entry->d_name);
   }
+
   closedir(dir);
   return file_count;
 }
@@ -206,6 +214,7 @@ bool handle_login(const char* delimiter, const char* password, InotifyThreadArgs
 
     int file_count = file_list(inotify_args.path_to_watch, list_of_files);
     char* message = construct_string((const char**)list_of_files, file_count, delimiter);
+    printf("%s\n", message);
     int bytes_sent = send(inotify_args.client_sock, message, strlen(message), 0);
     if (bytes_sent < 0) {
       printf("\nError! Can not send data to server! Client exit immediately!\n");
@@ -217,63 +226,3 @@ bool handle_login(const char* delimiter, const char* password, InotifyThreadArgs
   }
   return false;
 }
-
-GtkWidget *window;
-GtkWidget *fixed;
-GtkWidget *loginLabel;
-GtkWidget *usernameLabel;
-GtkWidget *passwordLabel;
-GtkWidget *usernameEntry;
-GtkWidget *passwordEntry;
-GtkWidget *submitButton;
-GtkWidget *backButton;
-GtkBuilder *builder; 
-InotifyThreadArgs login_inotify_args;
-void on_submitButton2_clicked(GtkButton *b){
-        gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameEntry));
-        gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordEntry));
- 
-        printf("%s %s\n", username, password);
-        strcpy(login_inotify_args.username, username);
-        bool success = handle_login(":", password, login_inotify_args);
-        fflush(stdout);
-
-        if (success) {
-            printf("Login successful!\n");
-
-            GtkWidget *menuFixed = createMenuView(0,NULL);
-            gtk_container_remove(GTK_CONTAINER(window), GTK_WIDGET(fixed));
-            gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(menuFixed));
-            gtk_widget_show_all(window);
-        }
-        else {
-            printf("Login failed!\n");
-        }
-}
-GtkWidget* createLoginView(InotifyThreadArgs inotify_args){
-        strcpy(login_inotify_args.path_to_watch, inotify_args.path_to_watch);
-        login_inotify_args.client_sock = inotify_args.client_sock;
-        login_inotify_args.port = inotify_args.port;
-        strcpy(login_inotify_args.server_port, inotify_args.server_port);
-        login_inotify_args.inotify_tid = inotify_args.inotify_tid;
-        strcpy(login_inotify_args.ip, inotify_args.ip);
-
-
-        builder = gtk_builder_new_from_file("xml/login.glade");
-        window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
-        g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-
-        fixed = GTK_WIDGET(gtk_builder_get_object(builder, "fixed"));
-        loginLabel = GTK_WIDGET(gtk_builder_get_object(builder, "loginLabel"));
-        usernameLabel = GTK_WIDGET(gtk_builder_get_object(builder, "usernameLabel"));
-        passwordLabel = GTK_WIDGET(gtk_builder_get_object(builder, "passwordLabel"));
-        usernameEntry = GTK_WIDGET(gtk_builder_get_object(builder, "usernameEntry"));
-        passwordEntry = GTK_WIDGET(gtk_builder_get_object(builder, "passwordEntry"));
-        submitButton = GTK_WIDGET(gtk_builder_get_object(builder, "submitButton"));
-        backButton = GTK_WIDGET(gtk_builder_get_object(builder, "backButton"));
-        g_signal_connect(submitButton, "clicked", G_CALLBACK(on_submitButton2_clicked), NULL);
-
-        return fixed;
-}
-
-

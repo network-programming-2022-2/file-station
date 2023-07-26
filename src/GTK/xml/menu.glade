@@ -2,23 +2,30 @@
 <!-- Generated with glade 3.40.0 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
-  <object class="GtkWindow" id="window">
+  <object class="GtkWindow" id="menuWindow">
+    <property name="width-request">1000</property>
+    <property name="height-request">500</property>
     <property name="can-focus">False</property>
+    <property name="window-position">center</property>
+    <property name="gravity">center</property>
     <child>
-      <object class="GtkFixed" id="fixed">
+      <object class="GtkFixed" id="menuFixed">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <child>
           <object class="GtkLabel" id="menuLabel">
             <property name="width-request">261</property>
-            <property name="height-request">28</property>
+            <property name="height-request">39</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">MENU</property>
+            <attributes>
+              <attribute name="font-desc" value="Adelle Sans Devanagari Semi-Bold 20"/>
+            </attributes>
           </object>
           <packing>
-            <property name="x">94</property>
-            <property name="y">25</property>
+            <property name="x">370</property>
+            <property name="y">49</property>
           </packing>
         </child>
         <child>
@@ -31,8 +38,8 @@
             <property name="receives-default">True</property>
           </object>
           <packing>
-            <property name="x">174</property>
-            <property name="y">70</property>
+            <property name="x">452</property>
+            <property name="y">124</property>
           </packing>
         </child>
         <child>
@@ -45,22 +52,22 @@
             <property name="receives-default">True</property>
           </object>
           <packing>
-            <property name="x">173</property>
-            <property name="y">115</property>
+            <property name="x">452</property>
+            <property name="y">176</property>
           </packing>
         </child>
         <child>
           <object class="GtkButton" id="logoutButton">
             <property name="label" translatable="yes">Log Out</property>
             <property name="width-request">100</property>
-            <property name="height-request">20</property>
+            <property name="height-request">34</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
           </object>
           <packing>
-            <property name="x">174</property>
-            <property name="y">159</property>
+            <property name="x">454</property>
+            <property name="y">232</property>
           </packing>
         </child>
       </object>

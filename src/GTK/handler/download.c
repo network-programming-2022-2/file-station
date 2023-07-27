@@ -362,7 +362,7 @@ void send_file(char ip[], int des_port, char filename[SIZE])
 
 void receive_file(int src_sockfd, char filename[], long file_size)
 {
-    char storage_path[SIZE] = "../storage/";
+    char storage_path[SIZE] = "/mnt/d/Dowloads_D/20222/Network_programming/latest/file-station/storage/";
  
     file_name_inserted[strlen(file_name_inserted)] = '\0';
  

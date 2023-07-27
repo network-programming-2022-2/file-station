@@ -86,8 +86,8 @@ void on_loginButton_clicked(GtkButton *b,int argc, char *argv[]){
 /// REGISTER
 
 void on_submitRegisterButton_clicked(GtkButton *b){
-        gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameRegisterEntry));
-        gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordRegisterEntry));
+        const gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameRegisterEntry));
+        const gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordRegisterEntry));
 
         strcpy(home_inotify_args.username, username);
         bool ok = handle_registration(":", password, home_inotify_args);
@@ -109,8 +109,8 @@ void on_backRegisterButton_clicked(GtkButton *b,int argc, char *argv[]){
 }
 //Login
 void on_submitLoginButton_clicked(GtkButton *b){
-        gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameLoginEntry));
-        gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordLoginEntry));
+        const gchar *username = gtk_entry_get_text(GTK_ENTRY(usernameLoginEntry));
+        const gchar *password = gtk_entry_get_text(GTK_ENTRY(passwordLoginEntry));
         strcpy(home_inotify_args.username, username);
         int peer_server_fd;
         bool ok = handle_login(":", password, home_inotify_args, &peer_server_fd);
@@ -150,7 +150,7 @@ void on_logoutMenuButton_clicked(GtkButton *b){
 }
 //Search
 void on_downloadButton_clicked(GtkWidget *button) {
-        gchar *downloadIndex = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(comboBox));
+        const gchar *downloadIndex = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(comboBox));
         if(downloadIndex==NULL){
                 return;
         }
@@ -158,7 +158,11 @@ void on_downloadButton_clicked(GtkWidget *button) {
         downloadData.ip = array[g_ascii_digit_value(*downloadIndex)-1].ip;
         downloadData.port = array[g_ascii_digit_value(*downloadIndex)-1].port;
         downloadData.user = array[g_ascii_digit_value(*downloadIndex)-1].user;
-        char filename[SIZE] = "hello.txt";
+        // char filename[SIZE] = "hello.txt";
+        const gchar *search_entry = gtk_entry_get_text(GTK_ENTRY(searchEntry));
+        char filename[SIZE];
+        strcpy(filename, search_entry);
+        printf("\nsearch entry:%s", filename);
 
         printf(" %s, %s, %s", downloadData.ip, downloadData.port, downloadData.user);
 
@@ -177,7 +181,7 @@ void on_searchButton_clicked(GtkWidget *button) {
     gtk_combo_box_text_remove_all(comboBox);
     gtk_label_set_text(GTK_LABEL(notifyLabel), "");
 
-    gchar *filename = gtk_entry_get_text(GTK_ENTRY(searchEntry));
+    const gchar *filename = gtk_entry_get_text(GTK_ENTRY(searchEntry));
     printf("%s\n", filename);
 
     SearchResult result[100];

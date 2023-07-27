@@ -23,7 +23,7 @@ bool handle_search(int client_sock, const char* delimiter, char username[], char
   buff[bytes_received] = '\0';
 
   printf("Receive: %s\n", buff);
-  if (strcmp(buff, "[server]: Search failed!\n") == 0)
+  if (strcmp(buff, "[server]: File not found!\n") == 0)
   {
     return false;
   }

@@ -195,6 +195,8 @@ void on_searchButton_clicked(GtkWidget *button) {
     else 
     {
       printf("search failed...\n");
+      gtk_label_set_text(GTK_LABEL(notifyLabel), "File not found!");
+      return;
     }
 
     char port_str[20];
